@@ -44,7 +44,7 @@
       <div class="container">
         <div class="layout">
 
-          <!-- LEFT COLUMN: Input + Output -->
+          <!-- LEFT COLUMN -->
           <div class="col-main">
 
             <!-- INPUT SECTION -->
@@ -76,7 +76,10 @@
               </div>
             </section>
 
-            <!-- CURRENT ANALYSIS BANNER (hidden by default) -->
+            <!-- ERROR BANNER -->
+            <div class="error-banner hidden" id="error-banner"></div>
+
+            <!-- ANALYSIS BANNER -->
             <div class="analysis-banner hidden" id="analysis-banner">
               <div class="banner-label">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -91,10 +94,10 @@
             <section class="card" id="issues-section">
               <div class="card-header">
                 <h2 class="section-title">
-                  <span class="section-icon issue-icon">⚠️</span>
+                  <span class="section-icon">⚠️</span>
                   Detected Issues
                 </h2>
-                <span class="badge badge-warning">3 found</span>
+                <span class="badge badge-warning" id="issues-badge">3 found</span>
               </div>
               <div class="card-body">
 
@@ -103,19 +106,21 @@
                     <span class="dot dot-amber"></span>
                     Ambiguity
                   </h3>
-                  <div class="issue-card">
-                    <div class="issue-header">
-                      <span class="issue-tag tag-amber">Ambiguous</span>
-                      <span class="issue-loc">§ Authentication Flow</span>
+                  <div id="ambiguity-list">
+                    <div class="issue-card">
+                      <div class="issue-header">
+                        <span class="issue-tag tag-amber">Ambiguous</span>
+                        <span class="issue-loc">§ Authentication Flow</span>
+                      </div>
+                      <p class="issue-text">"Users should be notified" — unclear whether this means email, in-app notification, SMS, or all three.</p>
                     </div>
-                    <p class="issue-text">"Users should be notified" — unclear whether this means email, in-app notification, SMS, or all three.</p>
-                  </div>
-                  <div class="issue-card">
-                    <div class="issue-header">
-                      <span class="issue-tag tag-amber">Ambiguous</span>
-                      <span class="issue-loc">§ Session Management</span>
+                    <div class="issue-card">
+                      <div class="issue-header">
+                        <span class="issue-tag tag-amber">Ambiguous</span>
+                        <span class="issue-loc">§ Session Management</span>
+                      </div>
+                      <p class="issue-text">"After a reasonable time" is not a concrete value. Engineers need a specific timeout duration.</p>
                     </div>
-                    <p class="issue-text">"After a reasonable time" is not a concrete value. Engineers need a specific timeout duration.</p>
                   </div>
                 </div>
 
@@ -124,12 +129,14 @@
                     <span class="dot dot-red"></span>
                     Missing Logic
                   </h3>
-                  <div class="issue-card issue-card-red">
-                    <div class="issue-header">
-                      <span class="issue-tag tag-red">Missing Logic</span>
-                      <span class="issue-loc">§ Error Handling</span>
+                  <div id="missing-list">
+                    <div class="issue-card issue-card-red">
+                      <div class="issue-header">
+                        <span class="issue-tag tag-red">Missing Logic</span>
+                        <span class="issue-loc">§ Error Handling</span>
+                      </div>
+                      <p class="issue-text">No specification for what happens when a login attempt fails 5+ times. Rate limiting behavior is undefined.</p>
                     </div>
-                    <p class="issue-text">No specification for what happens when a login attempt fails 5+ times. Rate limiting behavior is undefined.</p>
                   </div>
                 </div>
 
@@ -138,12 +145,14 @@
                     <span class="dot dot-blue"></span>
                     Undefined Inputs
                   </h3>
-                  <div class="issue-card issue-card-blue">
-                    <div class="issue-header">
-                      <span class="issue-tag tag-blue">Undefined Input</span>
-                      <span class="issue-loc">§ User Profile</span>
+                  <div id="undefined-list">
+                    <div class="issue-card issue-card-blue">
+                      <div class="issue-header">
+                        <span class="issue-tag tag-blue">Undefined Input</span>
+                        <span class="issue-loc">§ User Profile</span>
+                      </div>
+                      <p class="issue-text">The required fields for user profile creation are not listed. Password complexity rules are absent.</p>
                     </div>
-                    <p class="issue-text">The required fields for user profile creation are not listed. Password complexity rules are absent.</p>
                   </div>
                 </div>
 
@@ -238,10 +247,10 @@
                   <span class="section-icon">❓</span>
                   Clarifying Questions
                 </h2>
-                <span class="badge badge-neutral">3 questions</span>
+                <span class="badge badge-neutral" id="questions-badge">3 questions</span>
               </div>
               <div class="card-body">
-                <ol class="question-list">
+                <ol class="question-list" id="question-list">
                   <li class="question-item">
                     <div class="question-meta">Priority: High</div>
                     <p>What is the exact session timeout duration, and does inactivity reset the timer or does the clock run from first login?</p>
@@ -271,35 +280,35 @@
                   <div class="score-circle">
                     <svg viewBox="0 0 120 120" class="score-svg">
                       <circle class="score-bg" cx="60" cy="60" r="50"/>
-                      <circle class="score-ring" cx="60" cy="60" r="50" stroke-dasharray="188 314"/>
+                      <circle class="score-ring" id="score-ring" cx="60" cy="60" r="50" stroke-dasharray="188 314"/>
                     </svg>
                     <div class="score-label">
-                      <span class="score-num">60%</span>
+                      <span class="score-num" id="score-num">60%</span>
                       <span class="score-sub">clarity</span>
                     </div>
                   </div>
                   <div class="score-detail">
-                    <p class="score-summary">This specification has <strong>moderate clarity</strong>. Several sections lack concrete acceptance criteria, and multiple edge cases are unaddressed. Resolution of the 3 clarifying questions above would raise the score significantly.</p>
+                    <p class="score-summary" id="score-summary">This specification has <strong>moderate clarity</strong>. Several sections lack concrete acceptance criteria, and multiple edge cases are unaddressed.</p>
                     <div class="score-bars">
                       <div class="score-bar-row">
                         <span class="score-bar-label">Completeness</span>
-                        <div class="score-bar-track"><div class="score-bar-fill" style="width: 55%"></div></div>
-                        <span class="score-bar-pct">55%</span>
+                        <div class="score-bar-track"><div class="score-bar-fill" data-key="completeness" style="width: 55%"></div></div>
+                        <span class="score-bar-pct">–</span>
                       </div>
                       <div class="score-bar-row">
                         <span class="score-bar-label">Clarity</span>
-                        <div class="score-bar-track"><div class="score-bar-fill" style="width: 62%"></div></div>
-                        <span class="score-bar-pct">62%</span>
+                        <div class="score-bar-track"><div class="score-bar-fill" data-key="clarity" style="width: 62%"></div></div>
+                        <span class="score-bar-pct">–</span>
                       </div>
                       <div class="score-bar-row">
                         <span class="score-bar-label">Edge Cases</span>
-                        <div class="score-bar-track"><div class="score-bar-fill score-bar-low" style="width: 30%"></div></div>
-                        <span class="score-bar-pct">30%</span>
+                        <div class="score-bar-track"><div class="score-bar-fill score-bar-low" data-key="edge" style="width: 30%"></div></div>
+                        <span class="score-bar-pct">–</span>
                       </div>
                       <div class="score-bar-row">
                         <span class="score-bar-label">Testability</span>
-                        <div class="score-bar-track"><div class="score-bar-fill" style="width: 70%"></div></div>
-                        <span class="score-bar-pct">70%</span>
+                        <div class="score-bar-track"><div class="score-bar-fill" data-key="test" style="width: 70%"></div></div>
+                        <span class="score-bar-pct">–</span>
                       </div>
                     </div>
                   </div>
@@ -333,7 +342,7 @@
                   </li>
                   <li class="history-item">
                     <div class="history-top">
-                      <span class="history-title">Checkout & Payments</span>
+                      <span class="history-title">Checkout &amp; Payments</span>
                       <span class="history-score score-high">84%</span>
                     </div>
                     <p class="history-snippet">Multi-step checkout, Stripe integration, discount codes, order confirmations...</p>
@@ -357,7 +366,6 @@
               </div>
             </section>
 
-            <!-- QUICK TIPS -->
             <section class="card tips-card">
               <div class="card-header">
                 <h2 class="section-title tips-title">

@@ -776,6 +776,43 @@ body {
 }
 
 /* ======================================
+   ERROR BANNER
+====================================== */
+.error-banner {
+  background: #fff1f0;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  padding: 13px 18px;
+  font-size: 0.8125rem;
+  color: #991b1b;
+  font-weight: 500;
+}
+
+.error-banner.hidden {
+  display: none;
+}
+
+/* ======================================
+   OK ISSUE CARD
+====================================== */
+.issue-card-ok {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+/* ======================================
+   SPINNER
+====================================== */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.spin {
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+}
+
+/* ======================================
    FOOTER
 ====================================== */
 .site-footer {
