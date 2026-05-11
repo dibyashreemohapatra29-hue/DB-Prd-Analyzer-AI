@@ -15,8 +15,28 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-VAGUE_WORDS = ["fast", "scalable", "intuitive", "efficient", "simple", "easy", "seamless", "robust", "flexible"]
+GROQ_API_KEY   = os.getenv("GROQ_API_KEY")
+SUPABASE_URL   = os.getenv("SUPABASE_URL")
+SUPABASE_KEY   = os.getenv("SUPABASE_KEY")
+
+VAGUE_WORDS = [
+    "fast", "scalable", "intuitive", "efficient",
+    "simple", "easy", "seamless", "robust", "flexible",
+]
+
+MAX_ISSUES    = 5
+MAX_QUESTIONS = 3
+
+
+def get_supabase():
+    if not SUPABASE_URL or not SUPABASE_KEY:
+        return None
+    try:
+        from supabase import create_client
+        return create_client(SUPABASE_URL, SUPABASE_KEY)
+    except Exception as e:
+        print(f"Supabase init error: {e}")
+        return None
 
 
 class AnalyzeRequest(BaseModel):
@@ -25,25 +45,62 @@ class AnalyzeRequest(BaseModel):
 
 def run_rule_engine(text: str) -> list:
     issues = []
+    found_vague = []
 
     for word in VAGUE_WORDS:
         if re.search(r'\b' + re.escape(word) + r'\b', text, re.IGNORECASE):
-            issues.append({
-                "text": word,
-                "type": "ambiguity",
-                "explanation": f'"{word}" is vague and unmeasurable. Replace with a concrete, testable criterion.',
-                "confidence": 0.7,
-            })
+            found_vague.append(word)
 
-    if "edge case" not in text.lower():
+    if found_vague:
+        top = found_vague[:2]
+        issues.append({
+            "text": f'Vague language: "{", ".join(top)}"',
+            "type": "ambiguity",
+            "explanation": (
+                f'Terms like "{", ".join(top)}" are unmeasurable. '
+                "Replace with concrete, testable criteria (e.g. response time < 200 ms)."
+            ),
+            "confidence": 0.8,
+        })
+
+    has_edge_cases = "edge case" in text.lower()
+    if not has_edge_cases:
         issues.append({
             "text": "No edge cases mentioned",
             "type": "missing_logic",
-            "explanation": "The specification does not address edge cases or failure scenarios.",
+            "explanation": "The specification does not address edge cases or failure scenarios. Consider at least 2–3 error paths.",
             "confidence": 0.85,
         })
 
-    return issues
+    return issues, has_edge_cases
+
+
+def deduplicate(issues: list) -> list:
+    seen_tokens: list[set] = []
+    deduped = []
+
+    for issue in issues:
+        tokens = set(re.findall(r'\w+', issue.get("text", "").lower()))
+        is_dup = any(len(tokens & s) >= 2 for s in seen_tokens)
+        if not is_dup:
+            seen_tokens.append(tokens)
+            deduped.append(issue)
+
+    return deduped
+
+
+def compute_confidence(issues: list, has_edge_cases: bool, llm_score: float) -> float:
+    base = 0.85
+    penalty = len(issues) * 0.08
+    edge_bonus = 0.05 if has_edge_cases else 0.0
+    rule_score = max(0.30, min(0.95, base - penalty + edge_bonus))
+
+    if llm_score and llm_score != 0.5:
+        final = round((rule_score * 0.4 + llm_score * 0.6), 2)
+    else:
+        final = round(rule_score, 2)
+
+    return max(0.20, min(0.95, final))
 
 
 def call_groq(text: str) -> dict:
@@ -53,36 +110,44 @@ def call_groq(text: str) -> dict:
     try:
         client = Groq(api_key=GROQ_API_KEY)
 
-        prompt = f"""You are a senior product analyst reviewing a PRD for clarity and completeness.
+        prompt = f"""You are a senior product analyst. Analyze this PRD strictly and return JSON.
 
-Analyze the following PRD and return a JSON object with exactly these fields:
-- "issues": array of objects, each with: "text" (short label), "type" (one of: ambiguity, missing_logic, undefined_input), "explanation" (1-2 sentences), "confidence" (0.0–1.0)
-- "questions": array of strings (3–5 clarifying questions an engineer would need answered)
-- "confidence_score": a single number 0.0–1.0 representing overall PRD clarity and completeness
+Rules:
+- Return at most 3 issues — only the most critical ones
+- Each issue must have a UNIQUE root cause (no duplicates)
+- Return exactly 2-3 clarifying questions (the most important ones)
+- confidence_score: 0.0–1.0 reflecting how implementation-ready this PRD is
+  (0.8+ means clear and complete, 0.5 means significant gaps, below 0.4 means very poor)
 
-PRD to analyze:
+Return this JSON shape only — no markdown, no code fences:
+{{
+  "issues": [
+    {{"text": "short label", "type": "ambiguity|missing_logic|undefined_input", "explanation": "1-2 sentences", "confidence": 0.0-1.0}}
+  ],
+  "questions": ["question 1", "question 2"],
+  "confidence_score": 0.0-1.0
+}}
+
+PRD:
 ---
 {text}
----
-
-Return ONLY valid JSON with no markdown, no code blocks, no extra text."""
+---"""
 
         response = client.chat.completions.create(
             model="compound-beta-mini",
             messages=[{"role": "user", "content": prompt}],
-            temperature=0.3,
-            max_tokens=1200,
+            temperature=0.2,
+            max_tokens=900,
         )
 
         content = response.choices[0].message.content.strip()
-
         content = re.sub(r"^```[a-z]*\n?", "", content)
         content = re.sub(r"\n?```$", "", content)
 
         parsed = json.loads(content)
         return {
-            "issues": parsed.get("issues", []),
-            "questions": parsed.get("questions", []),
+            "issues": parsed.get("issues", [])[:3],
+            "questions": parsed.get("questions", [])[:MAX_QUESTIONS],
             "confidence_score": float(parsed.get("confidence_score", 0.5)),
         }
     except Exception as e:
@@ -90,28 +155,61 @@ Return ONLY valid JSON with no markdown, no code blocks, no extra text."""
         return {"issues": [], "questions": [], "confidence_score": 0.5}
 
 
+def save_to_supabase(prd_text: str, issues: list, questions: list, confidence_score: float):
+    client = get_supabase()
+    if not client:
+        return
+    try:
+        client.table("prd_analyses").insert({
+            "prd_text": prd_text,
+            "issues": issues,
+            "questions": questions,
+            "confidence_score": confidence_score,
+        }).execute()
+    except Exception as e:
+        print(f"Supabase save error: {e}")
+
+
 @app.post("/api/analyze")
 def analyze(req: AnalyzeRequest):
     text = req.prd_text.strip()
 
-    rule_issues = run_rule_engine(text)
-    llm_result = call_groq(text)
+    rule_issues, has_edge_cases = run_rule_engine(text)
+    llm_result   = call_groq(text)
+    llm_issues   = llm_result.get("issues", [])
+    questions    = llm_result.get("questions", [])[:MAX_QUESTIONS]
+    llm_score    = llm_result.get("confidence_score", 0.5)
 
-    all_issues = rule_issues + llm_result.get("issues", [])
+    combined = rule_issues + llm_issues
+    combined.sort(key=lambda i: i.get("confidence", 0), reverse=True)
+    deduped  = deduplicate(combined)[:MAX_ISSUES]
 
-    seen = set()
-    deduped = []
-    for issue in all_issues:
-        key = issue.get("text", "").lower()
-        if key not in seen:
-            seen.add(key)
-            deduped.append(issue)
+    confidence = compute_confidence(deduped, has_edge_cases, llm_score)
+
+    save_to_supabase(text, deduped, questions, confidence)
 
     return {
-        "issues": deduped,
-        "questions": llm_result.get("questions", []),
-        "confidence_score": llm_result.get("confidence_score", 0.5),
+        "issues":           deduped,
+        "questions":        questions,
+        "confidence_score": confidence,
     }
+
+
+@app.get("/api/analyses")
+def get_analyses():
+    client = get_supabase()
+    if not client:
+        return {"analyses": []}
+    try:
+        result = client.table("prd_analyses") \
+            .select("id, prd_text, confidence_score, issues, created_at") \
+            .order("created_at", desc=True) \
+            .limit(10) \
+            .execute()
+        return {"analyses": result.data}
+    except Exception as e:
+        print(f"Supabase fetch error: {e}")
+        return {"analyses": []}
 
 
 @app.get("/api/healthz")
