@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <title>PRD Analyzer</title>
+    <meta name="description" content="Identify gaps in your PRD before engineers do." />
+    <meta name="robots" content="index, follow" />
+    <meta property="og:title" content="PRD Analyzer" />
+    <meta property="og:description" content="Identify gaps in your PRD before engineers do." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;1,14..32,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+
+    <!-- HEADER -->
+    <header class="site-header">
+      <div class="container">
+        <div class="header-inner">
+          <div class="header-brand">
+            <svg class="header-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <line x1="10" y1="9" x2="8" y2="9"/>
+            </svg>
+            <div>
+              <h1 class="header-title">PRD Analyzer</h1>
+              <p class="header-subtitle">Identify gaps before engineers do</p>
+            </div>
+          </div>
+          <div class="header-badge">Beta</div>
+        </div>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <div class="container">
+        <div class="layout">
+
+          <!-- LEFT COLUMN: Input + Output -->
+          <div class="col-main">
+
+            <!-- INPUT SECTION -->
+            <section class="card" id="input-section">
+              <div class="card-header">
+                <h2 class="section-title">
+                  <span class="section-icon">📋</span>
+                  Your Specification
+                </h2>
+              </div>
+              <div class="card-body">
+                <label class="field-label" for="prd-input">Paste your PRD or feature specification</label>
+                <textarea
+                  id="prd-input"
+                  class="prd-textarea"
+                  placeholder="e.g. Build a user authentication flow that supports email/password login, OAuth with Google, and 2FA. Users should be able to reset their password via email. The session should expire after 30 minutes of inactivity..."
+                  rows="10"
+                ></textarea>
+                <div class="input-actions">
+                  <span class="char-count" id="char-count">0 characters</span>
+                  <button class="btn btn-primary" id="analyze-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="11" cy="11" r="8"/>
+                      <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                    Analyze PRD
+                  </button>
+                </div>
+              </div>
+            </section>
+
+            <!-- CURRENT ANALYSIS BANNER (hidden by default) -->
+            <div class="analysis-banner hidden" id="analysis-banner">
+              <div class="banner-label">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                Analyzing:
+              </div>
+              <p class="banner-text" id="banner-text"></p>
+            </div>
+
+            <!-- DETECTED ISSUES -->
+            <section class="card" id="issues-section">
+              <div class="card-header">
+                <h2 class="section-title">
+                  <span class="section-icon issue-icon">⚠️</span>
+                  Detected Issues
+                </h2>
+                <span class="badge badge-warning">3 found</span>
+              </div>
+              <div class="card-body">
+
+                <div class="subsection">
+                  <h3 class="subsection-title">
+                    <span class="dot dot-amber"></span>
+                    Ambiguity
+                  </h3>
+                  <div class="issue-card">
+                    <div class="issue-header">
+                      <span class="issue-tag tag-amber">Ambiguous</span>
+                      <span class="issue-loc">§ Authentication Flow</span>
+                    </div>
+                    <p class="issue-text">"Users should be notified" — unclear whether this means email, in-app notification, SMS, or all three.</p>
+                  </div>
+                  <div class="issue-card">
+                    <div class="issue-header">
+                      <span class="issue-tag tag-amber">Ambiguous</span>
+                      <span class="issue-loc">§ Session Management</span>
+                    </div>
+                    <p class="issue-text">"After a reasonable time" is not a concrete value. Engineers need a specific timeout duration.</p>
+                  </div>
+                </div>
+
+                <div class="subsection">
+                  <h3 class="subsection-title">
+                    <span class="dot dot-red"></span>
+                    Missing Logic
+                  </h3>
+                  <div class="issue-card issue-card-red">
+                    <div class="issue-header">
+                      <span class="issue-tag tag-red">Missing Logic</span>
+                      <span class="issue-loc">§ Error Handling</span>
+                    </div>
+                    <p class="issue-text">No specification for what happens when a login attempt fails 5+ times. Rate limiting behavior is undefined.</p>
+                  </div>
+                </div>
+
+                <div class="subsection">
+                  <h3 class="subsection-title">
+                    <span class="dot dot-blue"></span>
+                    Undefined Inputs
+                  </h3>
+                  <div class="issue-card issue-card-blue">
+                    <div class="issue-header">
+                      <span class="issue-tag tag-blue">Undefined Input</span>
+                      <span class="issue-loc">§ User Profile</span>
+                    </div>
+                    <p class="issue-text">The required fields for user profile creation are not listed. Password complexity rules are absent.</p>
+                  </div>
+                </div>
+
+              </div>
+            </section>
+
+            <!-- EDGE CASES -->
+            <section class="card">
+              <div class="card-header">
+                <h2 class="section-title">
+                  <span class="section-icon">🔍</span>
+                  Missing Edge Cases
+                </h2>
+                <span class="badge badge-red">5 missing</span>
+              </div>
+              <div class="card-body">
+                <ul class="edge-list">
+                  <li class="edge-item">
+                    <span class="edge-num">01</span>
+                    <div>
+                      <strong>Concurrent sessions</strong>
+                      <p>What happens when the same user logs in from two devices simultaneously? Are sessions independent or mutually exclusive?</p>
+                    </div>
+                  </li>
+                  <li class="edge-item">
+                    <span class="edge-num">02</span>
+                    <div>
+                      <strong>Token expiry during active use</strong>
+                      <p>If a user is mid-form when their session expires, what is the expected behavior — silent refresh or hard redirect?</p>
+                    </div>
+                  </li>
+                  <li class="edge-item">
+                    <span class="edge-num">03</span>
+                    <div>
+                      <strong>Email address change</strong>
+                      <p>Spec does not address what happens to existing sessions if a user changes their email address.</p>
+                    </div>
+                  </li>
+                  <li class="edge-item">
+                    <span class="edge-num">04</span>
+                    <div>
+                      <strong>Account deletion mid-flow</strong>
+                      <p>If an account is deleted while the user is logged in, the session must be invalidated — this is unspecified.</p>
+                    </div>
+                  </li>
+                  <li class="edge-item">
+                    <span class="edge-num">05</span>
+                    <div>
+                      <strong>Offline / network failure during auth</strong>
+                      <p>Network interruption during OAuth redirect is not covered. User experience for this state is undefined.</p>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+            </section>
+
+            <!-- ASSUMPTIONS -->
+            <section class="card">
+              <div class="card-header">
+                <h2 class="section-title">
+                  <span class="section-icon">💡</span>
+                  Undefined Assumptions
+                </h2>
+                <span class="badge badge-purple">4 assumptions</span>
+              </div>
+              <div class="card-body">
+                <div class="assumption-grid">
+                  <div class="assumption-card">
+                    <div class="assumption-label">Assumed</div>
+                    <p>All users have a valid email address. No mention of phone-number-only accounts.</p>
+                  </div>
+                  <div class="assumption-card">
+                    <div class="assumption-label">Assumed</div>
+                    <p>The product is web-only. Mobile app session handling may differ and is not covered.</p>
+                  </div>
+                  <div class="assumption-card">
+                    <div class="assumption-label">Assumed</div>
+                    <p>Third-party OAuth providers (Google) will always be available. No fallback is specified.</p>
+                  </div>
+                  <div class="assumption-card">
+                    <div class="assumption-label">Assumed</div>
+                    <p>Email delivery is instantaneous. No SLA or retry logic defined for password reset emails.</p>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- CLARIFYING QUESTIONS -->
+            <section class="card">
+              <div class="card-header">
+                <h2 class="section-title">
+                  <span class="section-icon">❓</span>
+                  Clarifying Questions
+                </h2>
+                <span class="badge badge-neutral">3 questions</span>
+              </div>
+              <div class="card-body">
+                <ol class="question-list">
+                  <li class="question-item">
+                    <div class="question-meta">Priority: High</div>
+                    <p>What is the exact session timeout duration, and does inactivity reset the timer or does the clock run from first login?</p>
+                  </li>
+                  <li class="question-item">
+                    <div class="question-meta">Priority: High</div>
+                    <p>Should failed login attempts lock the account, throttle requests, or trigger a CAPTCHA? What is the threshold?</p>
+                  </li>
+                  <li class="question-item">
+                    <div class="question-meta">Priority: Medium</div>
+                    <p>Is 2FA mandatory for all users, optional, or role-dependent (e.g. admins only)?</p>
+                  </li>
+                </ol>
+              </div>
+            </section>
+
+            <!-- CONFIDENCE SCORE -->
+            <section class="card">
+              <div class="card-header">
+                <h2 class="section-title">
+                  <span class="section-icon">📊</span>
+                  Confidence Score
+                </h2>
+              </div>
+              <div class="card-body">
+                <div class="score-layout">
+                  <div class="score-circle">
+                    <svg viewBox="0 0 120 120" class="score-svg">
+                      <circle class="score-bg" cx="60" cy="60" r="50"/>
+                      <circle class="score-ring" cx="60" cy="60" r="50" stroke-dasharray="188 314"/>
+                    </svg>
+                    <div class="score-label">
+                      <span class="score-num">60%</span>
+                      <span class="score-sub">clarity</span>
+                    </div>
+                  </div>
+                  <div class="score-detail">
+                    <p class="score-summary">This specification has <strong>moderate clarity</strong>. Several sections lack concrete acceptance criteria, and multiple edge cases are unaddressed. Resolution of the 3 clarifying questions above would raise the score significantly.</p>
+                    <div class="score-bars">
+                      <div class="score-bar-row">
+                        <span class="score-bar-label">Completeness</span>
+                        <div class="score-bar-track"><div class="score-bar-fill" style="width: 55%"></div></div>
+                        <span class="score-bar-pct">55%</span>
+                      </div>
+                      <div class="score-bar-row">
+                        <span class="score-bar-label">Clarity</span>
+                        <div class="score-bar-track"><div class="score-bar-fill" style="width: 62%"></div></div>
+                        <span class="score-bar-pct">62%</span>
+                      </div>
+                      <div class="score-bar-row">
+                        <span class="score-bar-label">Edge Cases</span>
+                        <div class="score-bar-track"><div class="score-bar-fill score-bar-low" style="width: 30%"></div></div>
+                        <span class="score-bar-pct">30%</span>
+                      </div>
+                      <div class="score-bar-row">
+                        <span class="score-bar-label">Testability</span>
+                        <div class="score-bar-track"><div class="score-bar-fill" style="width: 70%"></div></div>
+                        <span class="score-bar-pct">70%</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+          </div>
+
+          <!-- RIGHT COLUMN: History -->
+          <aside class="col-sidebar">
+            <section class="card history-card">
+              <div class="card-header">
+                <h2 class="section-title">
+                  <span class="section-icon">🕐</span>
+                  Previous Analyses
+                </h2>
+              </div>
+              <div class="card-body p-0">
+                <ul class="history-list">
+                  <li class="history-item history-item-active">
+                    <div class="history-top">
+                      <span class="history-title">User Auth Flow</span>
+                      <span class="history-score score-med">60%</span>
+                    </div>
+                    <p class="history-snippet">Email/password login, OAuth with Google, 2FA, session expiry...</p>
+                    <div class="history-meta">
+                      <span>3 issues · 5 edge cases</span>
+                      <span>Just now</span>
+                    </div>
+                  </li>
+                  <li class="history-item">
+                    <div class="history-top">
+                      <span class="history-title">Checkout & Payments</span>
+                      <span class="history-score score-high">84%</span>
+                    </div>
+                    <p class="history-snippet">Multi-step checkout, Stripe integration, discount codes, order confirmations...</p>
+                    <div class="history-meta">
+                      <span>1 issue · 2 edge cases</span>
+                      <span>2 days ago</span>
+                    </div>
+                  </li>
+                  <li class="history-item">
+                    <div class="history-top">
+                      <span class="history-title">Notification System</span>
+                      <span class="history-score score-low">41%</span>
+                    </div>
+                    <p class="history-snippet">Push notifications, email digests, in-app alerts, user preferences...</p>
+                    <div class="history-meta">
+                      <span>7 issues · 9 edge cases</span>
+                      <span>5 days ago</span>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+            </section>
+
+            <!-- QUICK TIPS -->
+            <section class="card tips-card">
+              <div class="card-header">
+                <h2 class="section-title tips-title">
+                  <span class="section-icon">✨</span>
+                  Tips for Better PRDs
+                </h2>
+              </div>
+              <div class="card-body">
+                <ul class="tips-list">
+                  <li>Define explicit acceptance criteria for every feature.</li>
+                  <li>Specify error states alongside happy paths.</li>
+                  <li>Include concrete numeric values — never "reasonable" or "quick".</li>
+                  <li>Name every actor, system, and external dependency.</li>
+                </ul>
+              </div>
+            </section>
+          </aside>
+
+        </div>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <p>PRD Analyzer &mdash; Catch gaps before engineers do.</p>
+      </div>
+    </footer>
+
+    <script type="module" src="/src/script.js"></script>
+  </body>
+</html>
