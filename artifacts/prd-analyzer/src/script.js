@@ -98,6 +98,7 @@ async function runAnalysis(text) {
     const data = await res.json();
     renderResults(data);
     addHistoryEntry(text, data);
+    loadDashboard();
   } catch (err) {
     showError(err.message || 'Something went wrong. Please try again.');
   } finally {
@@ -323,3 +324,81 @@ function timeAgo(date) {
 }
 
 loadHistory();
+loadDashboard();
+
+// ── Admin Dashboard ───────────────────────────────────────────────────────────
+async function loadDashboard() {
+  const grid  = document.getElementById('dashboard-grid');
+  const badge = document.getElementById('dashboard-badge');
+  if (!grid) return;
+
+  try {
+    const res = await fetch('/api/history');
+    if (!res.ok) throw new Error('Failed to load');
+    const entries = await res.json();
+
+    if (badge) badge.textContent = `${entries.length} stored`;
+
+    if (!entries.length) {
+      grid.innerHTML = `<div class="dash-empty">No analyses stored yet. Run your first PRD analysis above.</div>`;
+      return;
+    }
+
+    grid.innerHTML = entries.map((entry, idx) => buildDashCard(entry, idx)).join('');
+
+    grid.querySelectorAll('.dash-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const wasExpanded = card.classList.contains('expanded');
+        grid.querySelectorAll('.dash-card').forEach(c => c.classList.remove('expanded'));
+        if (!wasExpanded) card.classList.add('expanded');
+      });
+    });
+
+  } catch (err) {
+    if (badge) badge.textContent = 'Unavailable';
+    grid.innerHTML = `<div class="dash-empty">Could not load history — Supabase may not be configured yet.</div>`;
+  }
+}
+
+function buildDashCard(entry, idx) {
+  const pct        = Math.round((entry.confidence_score || 0.5) * 100);
+  const issues     = Array.isArray(entry.issues) ? entry.issues : [];
+  const issueCount = issues.length;
+  const preview    = (entry.prd_text || '').slice(0, 100).trimEnd() + (entry.prd_text?.length > 100 ? '…' : '');
+  const when       = entry.created_at ? timeAgo(new Date(entry.created_at)) : '—';
+
+  const statusLabel = issueCount > 4 ? 'Low Quality PRD' : issueCount >= 2 ? 'Needs Improvement' : 'Ready for Engineering';
+  const statusCls   = issueCount > 4 ? 'status-red'      : issueCount >= 2 ? 'status-yellow'     : 'status-green';
+  const scoreCls    = pct >= 70 ? 'score-high' : pct >= 40 ? 'score-med' : 'score-low';
+
+  const issueRows = issues.slice(0, 3).map(issue => `
+    <div class="dash-detail-issue">
+      <strong>${escHtml(issue.text || '')}</strong> — ${escHtml(issue.explanation || '')}
+    </div>
+  `).join('');
+
+  const noIssues = issues.length === 0
+    ? `<div class="dash-detail-issue">✓ No issues detected</div>`
+    : '';
+
+  return `
+    <div class="dash-card" data-idx="${idx}">
+      <div class="dash-card-top">
+        <p class="dash-card-preview">${escHtml(preview)}</p>
+        <span class="dash-card-score history-score ${scoreCls}">${pct}%</span>
+      </div>
+      <div class="dash-card-meta">
+        <span class="dash-card-status prd-status-label ${statusCls}">${statusLabel}</span>
+        <span class="dash-card-issues">${issueCount} issue${issueCount !== 1 ? 's' : ''}</span>
+        <span class="dash-card-time">${when}</span>
+      </div>
+      <div class="dash-detail">
+        <div class="dash-detail-prd">${escHtml(entry.prd_text || '')}</div>
+        <div class="dash-detail-issues">
+          ${issueRows || noIssues}
+          ${issues.length > 3 ? `<div class="dash-detail-issue" style="color:#9ca3af">+${issues.length - 3} more issue${issues.length - 3 !== 1 ? 's' : ''}…</div>` : ''}
+        </div>
+      </div>
+    </div>
+  `;
+}

@@ -268,21 +268,53 @@ def analyze(req: AnalyzeRequest):
     }
 
 
-@app.get("/api/analyses")
-def get_analyses():
+def fetch_analyses_from_supabase(limit: int = 10) -> list:
     client = get_supabase()
     if not client:
-        return {"analyses": []}
+        return []
     try:
         result = client.table("prd_analysis") \
-            .select("id, prd_text, confidence_score, issues, created_at") \
+            .select("id, prd_text, confidence_score, issues, questions, created_at") \
             .order("created_at", desc=True) \
-            .limit(10) \
+            .limit(limit) \
             .execute()
-        return {"analyses": result.data}
+        rows = result.data or []
+        for row in rows:
+            if isinstance(row.get("issues"), str):
+                try:
+                    row["issues"] = json.loads(row["issues"])
+                except Exception:
+                    row["issues"] = []
+            if isinstance(row.get("questions"), str):
+                try:
+                    row["questions"] = json.loads(row["questions"])
+                except Exception:
+                    row["questions"] = []
+        return rows
     except Exception as e:
         print(f"Supabase fetch error: {e}")
-        return {"analyses": []}
+        return []
+
+
+@app.get("/api/analyses")
+def get_analyses():
+    return {"analyses": fetch_analyses_from_supabase(10)}
+
+
+@app.get("/api/history")
+def get_history():
+    rows = fetch_analyses_from_supabase(10)
+    return [
+        {
+            "id":               r.get("id"),
+            "prd_text":         r.get("prd_text", ""),
+            "confidence_score": r.get("confidence_score", 0.5),
+            "issues":           r.get("issues", []),
+            "questions":        r.get("questions", []),
+            "created_at":       r.get("created_at", ""),
+        }
+        for r in rows
+    ]
 
 
 @app.get("/api/healthz")
