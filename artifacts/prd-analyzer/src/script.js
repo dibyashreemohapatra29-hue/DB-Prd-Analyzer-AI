@@ -4,20 +4,25 @@ const charCount      = document.getElementById('char-count');
 const analysisBanner = document.getElementById('analysis-banner');
 const bannerText     = document.getElementById('banner-text');
 
+// ── Character counter ─────────────────────────────────────────────────────────
 textarea.addEventListener('input', () => {
   const len = textarea.value.length;
   charCount.textContent = len === 1 ? '1 character' : `${len.toLocaleString()} characters`;
+  clearInputError();
 });
 
+// ── Analyze button ────────────────────────────────────────────────────────────
 analyzeBtn.addEventListener('click', () => {
   const text = textarea.value.trim();
+
   if (!text) {
-    textarea.focus();
-    textarea.style.borderColor = '#ef4444';
-    textarea.style.boxShadow = '0 0 0 3px rgba(239,68,68,0.15)';
-    setTimeout(() => { textarea.style.borderColor = ''; textarea.style.boxShadow = ''; }, 1800);
-    return;
+    return showInputError('Please enter a PRD');
   }
+  if (text.length < 20) {
+    return showInputError('PRD too short — please provide more detail');
+  }
+
+  clearInputError();
 
   const preview = text.length > 140 ? text.slice(0, 140).trimEnd() + '...' : text;
   bannerText.textContent = preview;
@@ -39,6 +44,27 @@ document.querySelectorAll('.history-item').forEach((item) => {
   });
 });
 
+// ── Input validation helpers ──────────────────────────────────────────────────
+function showInputError(msg) {
+  textarea.classList.add('textarea-error');
+  let err = document.getElementById('input-error');
+  if (!err) {
+    err = document.createElement('p');
+    err.id = 'input-error';
+    err.className = 'input-error-msg';
+    textarea.parentNode.insertBefore(err, textarea.nextSibling);
+  }
+  err.textContent = msg;
+  textarea.focus();
+}
+
+function clearInputError() {
+  textarea.classList.remove('textarea-error');
+  const err = document.getElementById('input-error');
+  if (err) err.remove();
+}
+
+// ── Loading state ─────────────────────────────────────────────────────────────
 function setLoading(on) {
   analyzeBtn.disabled = on;
   analyzeBtn.style.opacity = on ? '0.7' : '';
@@ -48,6 +74,7 @@ function setLoading(on) {
     : `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Analyze PRD`;
 }
 
+// ── API call ──────────────────────────────────────────────────────────────────
 async function runAnalysis(text) {
   try {
     const res = await fetch('/api/analyze', {
@@ -55,7 +82,19 @@ async function runAnalysis(text) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prd_text: text }),
     });
+
+    if (res.status === 422) {
+      const body = await res.json();
+      const msg = typeof body.detail === 'string'
+        ? body.detail
+        : Array.isArray(body.detail)
+          ? (body.detail[0]?.msg || 'Invalid input').replace('Value error, ', '')
+          : 'Invalid input';
+      showInputError(msg);
+      return;
+    }
     if (!res.ok) throw new Error(`Server error: ${res.status}`);
+
     const data = await res.json();
     renderResults(data);
     addHistoryEntry(text, data);
@@ -66,8 +105,9 @@ async function runAnalysis(text) {
   }
 }
 
+// ── Render results ────────────────────────────────────────────────────────────
 function renderResults(data) {
-  const { issues = [], questions = [], confidence_score = 0.5 } = data;
+  const { issues = [], questions = [], confidence_score = 0.5, status = '' } = data;
 
   const ambiguity  = issues.filter(i => i.type === 'ambiguity');
   const missing    = issues.filter(i => i.type === 'missing_logic');
@@ -81,7 +121,7 @@ function renderResults(data) {
   if (badge) badge.textContent = `${issues.length} found`;
 
   renderQuestions(questions);
-  renderConfidence(confidence_score);
+  renderConfidence(confidence_score, status);
 
   document.getElementById('issues-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
@@ -121,11 +161,13 @@ function renderQuestions(questions) {
   `).join('');
 }
 
-function renderConfidence(score) {
-  const pct   = Math.round(score * 100);
-  const numEl = document.getElementById('score-num');
-  const ringEl= document.getElementById('score-ring');
-  const barEls= document.querySelectorAll('.score-bar-fill[data-key]');
+function renderConfidence(score, status) {
+  const pct    = Math.round(score * 100);
+  const numEl  = document.getElementById('score-num');
+  const ringEl = document.getElementById('score-ring');
+  const barEls = document.querySelectorAll('.score-bar-fill[data-key]');
+
+  const color = pct >= 70 ? '#22c55e' : pct >= 40 ? '#f59e0b' : '#ef4444';
 
   if (numEl) numEl.textContent = `${pct}%`;
 
@@ -134,37 +176,56 @@ function renderConfidence(score) {
     const filled = (score * circumference).toFixed(1);
     const rest   = (circumference - filled).toFixed(1);
     ringEl.setAttribute('stroke-dasharray', `${filled} ${rest}`);
-    ringEl.style.stroke = pct >= 70 ? '#22c55e' : pct >= 45 ? '#4f63e7' : '#ef4444';
+    ringEl.style.stroke = color;
   }
 
   barEls.forEach(bar => {
     bar.style.width = `${pct}%`;
-    pct < 40 ? bar.classList.add('score-bar-low') : bar.classList.remove('score-bar-low');
+    bar.style.background = color;
+    bar.classList.remove('score-bar-low');
   });
 
   const summary = document.getElementById('score-summary');
   if (summary) {
-    const level = pct >= 70 ? 'high clarity' : pct >= 45 ? 'moderate clarity' : 'low clarity';
-    const color = pct >= 70 ? '#16a34a'       : pct >= 45 ? '#1a1d23'         : '#dc2626';
+    const level = pct >= 70 ? 'high clarity' : pct >= 40 ? 'moderate clarity' : 'low clarity';
     summary.innerHTML = `This specification has <strong style="color:${color}">${level}</strong> (${pct}%). ${
       pct >= 70
         ? 'Most requirements are clear and testable.'
-        : pct >= 45
+        : pct >= 40
         ? 'Several sections lack concrete criteria or unaddressed edge cases.'
         : 'Significant gaps detected — resolve the issues above before handing to engineering.'
     }`;
   }
+
+  renderStatus(status, pct);
 }
 
+function renderStatus(status, pct) {
+  let el = document.getElementById('prd-status-label');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'prd-status-label';
+    el.className = 'prd-status-label';
+    const scoreCircle = document.querySelector('.score-circle');
+    if (scoreCircle) scoreCircle.after(el);
+  }
+
+  const isGreen  = pct >= 70;
+  const isYellow = pct >= 40 && pct < 70;
+
+  el.textContent = status || (isGreen ? 'Ready for Engineering' : isYellow ? 'Needs Improvement' : 'Low Quality PRD');
+  el.className   = 'prd-status-label ' + (isGreen ? 'status-green' : isYellow ? 'status-yellow' : 'status-red');
+}
+
+// ── History panel ─────────────────────────────────────────────────────────────
 function addHistoryEntry(text, data) {
   const list = document.querySelector('.history-list');
   if (!list) return;
 
-  const words = text.trim().split(/\s+/).slice(0, 5).join(' ');
-  const title = words.length < text.trim().length ? words + '…' : words;
-
+  const words      = text.trim().split(/\s+/).slice(0, 5).join(' ');
+  const title      = words + (text.trim().split(/\s+/).length > 5 ? '…' : '');
   const pct        = Math.round((data.confidence_score || 0.5) * 100);
-  const scoreClass = pct >= 70 ? 'score-high' : pct >= 45 ? 'score-med' : 'score-low';
+  const scoreClass = pct >= 70 ? 'score-high' : pct >= 40 ? 'score-med' : 'score-low';
   const issueCount = (data.issues || []).length;
   const snippet    = text.length > 60 ? text.slice(0, 60).trimEnd() + '...' : text;
 
@@ -187,10 +248,10 @@ function addHistoryEntry(text, data) {
     document.querySelectorAll('.history-item').forEach(el => el.classList.remove('history-item-active'));
     li.classList.add('history-item-active');
   });
-
   list.insertBefore(li, list.firstChild);
 }
 
+// ── Error banner ──────────────────────────────────────────────────────────────
 function showError(msg) {
   const banner = document.getElementById('error-banner');
   if (banner) {
@@ -200,6 +261,7 @@ function showError(msg) {
   }
 }
 
+// ── HTML escape ───────────────────────────────────────────────────────────────
 function escHtml(str) {
   return String(str)
     .replace(/&/g, '&amp;')
@@ -208,6 +270,7 @@ function escHtml(str) {
     .replace(/"/g, '&quot;');
 }
 
+// ── Load history from Supabase ────────────────────────────────────────────────
 async function loadHistory() {
   try {
     const res = await fetch('/api/analyses');
@@ -220,14 +283,14 @@ async function loadHistory() {
 
     list.innerHTML = '';
     analyses.forEach((entry, idx) => {
-      const text  = entry.prd_text || '';
-      const words = text.trim().split(/\s+/).slice(0, 5).join(' ');
-      const title = words + (text.length > words.length ? '…' : '');
-      const pct   = Math.round((entry.confidence_score || 0.5) * 100);
-      const scoreClass = pct >= 70 ? 'score-high' : pct >= 45 ? 'score-med' : 'score-low';
-      const issues = Array.isArray(entry.issues) ? entry.issues.length : 0;
-      const snippet = text.length > 60 ? text.slice(0, 60).trimEnd() + '...' : text;
-      const when = entry.created_at ? timeAgo(new Date(entry.created_at)) : '';
+      const text       = entry.prd_text || '';
+      const words      = text.trim().split(/\s+/).slice(0, 5).join(' ');
+      const title      = words + (text.trim().split(/\s+/).length > 5 ? '…' : '');
+      const pct        = Math.round((entry.confidence_score || 0.5) * 100);
+      const scoreClass = pct >= 70 ? 'score-high' : pct >= 40 ? 'score-med' : 'score-low';
+      const issues     = Array.isArray(entry.issues) ? entry.issues.length : 0;
+      const snippet    = text.length > 60 ? text.slice(0, 60).trimEnd() + '...' : text;
+      const when       = entry.created_at ? timeAgo(new Date(entry.created_at)) : '';
 
       const li = document.createElement('li');
       li.className = 'history-item' + (idx === 0 ? ' history-item-active' : '');
@@ -253,9 +316,9 @@ async function loadHistory() {
 
 function timeAgo(date) {
   const diff = Math.floor((Date.now() - date) / 1000);
-  if (diff < 60)   return 'Just now';
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400)return `${Math.floor(diff / 3600)}h ago`;
+  if (diff < 60)    return 'Just now';
+  if (diff < 3600)  return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
   return `${Math.floor(diff / 86400)}d ago`;
 }
 
