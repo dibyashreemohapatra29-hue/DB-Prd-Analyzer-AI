@@ -160,14 +160,22 @@ def save_to_supabase(prd_text: str, issues: list, questions: list, confidence_sc
     if not client:
         return
     try:
-        client.table("prd_analyses").insert({
-            "prd_text": prd_text,
-            "issues": issues,
-            "questions": questions,
+        client.table("prd_analysis").insert({
+            "prd_text":        prd_text,
+            "issues":          json.dumps(issues),
+            "questions":       json.dumps(questions),
             "confidence_score": confidence_score,
         }).execute()
     except Exception as e:
         print(f"Supabase save error: {e}")
+        try:
+            client.table("prd_analysis").insert({
+                "prd_text":        prd_text,
+                "confidence_score": confidence_score,
+            }).execute()
+            print("Supabase: saved with minimal fields")
+        except Exception as e2:
+            print(f"Supabase minimal save error: {e2}")
 
 
 @app.post("/api/analyze")
@@ -201,7 +209,7 @@ def get_analyses():
     if not client:
         return {"analyses": []}
     try:
-        result = client.table("prd_analyses") \
+        result = client.table("prd_analysis") \
             .select("id, prd_text, confidence_score, issues, created_at") \
             .order("created_at", desc=True) \
             .limit(10) \
