@@ -98,22 +98,19 @@
 
             <!-- SUMMARY CARD -->
             <section class="card" id="summary-card">
-              <div class="card-body">
-                <div class="summary-layout">
-                  <div class="summary-score-block">
-                    <div class="summary-score-num" id="sum-score-num">–</div>
-                    <div class="summary-score-bar-track">
-                      <div class="summary-score-bar" id="sum-score-bar" style="width:0%"></div>
-                    </div>
-                    <div class="summary-score-caption">Confidence Score</div>
-                  </div>
-                  <div class="summary-divider"></div>
-                  <div class="summary-info">
-                    <span class="summary-status-pill" id="sum-status"></span>
-                    <p class="summary-desc" id="sum-desc"></p>
-                    <div class="summary-top-issues" id="sum-top-issues"></div>
+              <div class="conf-row">
+                <span class="conf-label-text">Confidence</span>
+                <span class="conf-pct" id="sum-score-num">–</span>
+                <div class="conf-bar-wrap">
+                  <div class="conf-bar-track">
+                    <div class="conf-bar-fill" id="sum-score-bar" style="width:0%"></div>
                   </div>
                 </div>
+                <span class="summary-status-pill" id="sum-status"></span>
+              </div>
+              <div class="top-issues-section">
+                <p class="top-issues-label">Top Issues to Fix First</p>
+                <div id="sum-top-issues"></div>
               </div>
             </section>
 
@@ -142,7 +139,7 @@
                 <div class="tab-panel active" id="tab-issues">
                   <div class="subsection">
                     <h3 class="subsection-title">
-                      <span class="dot dot-amber"></span>
+                      <span class="dot dot-red"></span>
                       Ambiguity
                       <span class="group-count" id="count-ambiguity"></span>
                     </h3>
@@ -150,7 +147,7 @@
                   </div>
                   <div class="subsection">
                     <h3 class="subsection-title">
-                      <span class="dot dot-red"></span>
+                      <span class="dot dot-amber"></span>
                       Missing Logic
                       <span class="group-count" id="count-missing"></span>
                     </h3>
@@ -231,6 +228,7 @@
 
                 <!-- QUESTIONS TAB -->
                 <div class="tab-panel" id="tab-questions">
+                  <p class="questions-heading">What an engineer would ask you</p>
                   <ol class="question-list" id="question-list"></ol>
                 </div>
 

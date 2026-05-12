@@ -114,9 +114,9 @@ function renderResults(data) {
   const missing    = issues.filter(i => i.type === 'missing_logic');
   const undefined_ = issues.filter(i => i.type === 'undefined_input');
 
-  renderIssueSubsection('ambiguity-list', ambiguity,  'tag-amber', 'Ambiguous');
-  renderIssueSubsection('missing-list',   missing,    'tag-red',   'Missing Logic');
-  renderIssueSubsection('undefined-list', undefined_, 'tag-blue',  'Undefined Input');
+  renderIssueSubsection('ambiguity-list', ambiguity,  'tag-red',   'Ambiguity',       'icv2-red');
+  renderIssueSubsection('missing-list',   missing,    'tag-amber', 'Missing Logic',   'icv2-amber');
+  renderIssueSubsection('undefined-list', undefined_, 'tag-blue',  'Undefined Input', 'icv2-blue');
 
   setGroupCount('count-ambiguity', ambiguity.length);
   setGroupCount('count-missing',   missing.length);
@@ -143,38 +143,39 @@ function setGroupCount(id, count) {
   el.textContent = count > 0 ? `(${count})` : '';
 }
 
-function renderIssueSubsection(containerId, issues, tagClass, label) {
+function renderIssueSubsection(containerId, issues, tagClass, label, colorClass) {
   const container = document.getElementById(containerId);
   if (!container) return;
   if (issues.length === 0) {
-    container.innerHTML = `<div class="issue-card issue-card-ok"><p class="issue-text">✓ No ${label.toLowerCase()} issues detected.</p></div>`;
+    container.innerHTML = `<div class="icv2-empty">✓ PRD looks ready — no ${label.toLowerCase()} issues found.</div>`;
     return;
   }
+  const severity = tagClass === 'tag-amber' ? 'High' : 'Medium';
   container.innerHTML = issues.map(issue => `
-    <div class="issue-card ${tagClass === 'tag-red' ? 'issue-card-red' : tagClass === 'tag-blue' ? 'issue-card-blue' : ''}">
-      <div class="issue-header">
+    <div class="issue-card-v2 ${colorClass}">
+      <div class="icv2-top">
         <span class="issue-tag ${tagClass}">${label}</span>
-        <span class="issue-loc">${escHtml(issue.text)}</span>
+        <span class="icv2-severity">Severity: ${severity}</span>
       </div>
-      <p class="issue-text">${escHtml(issue.explanation)}</p>
+      <p class="icv2-text">${escHtml(issue.explanation)}</p>
+      ${issue.text ? `<span class="icv2-snippet">${escHtml(issue.text)}</span>` : ''}
     </div>
   `).join('');
 }
 
 function renderQuestions(questions) {
-  const list  = document.getElementById('question-list');
+  const list     = document.getElementById('question-list');
   const tabCount = document.getElementById('tab-count-questions');
   if (!list) return;
   if (tabCount) tabCount.textContent = questions.length;
 
   const shown = questions.slice(0, 3);
   if (shown.length === 0) {
-    list.innerHTML = `<li class="question-item"><p>No additional clarifying questions — the PRD is sufficiently detailed.</p></li>`;
+    list.innerHTML = `<li class="question-item question-item-empty"><p>No clarification needed — the PRD is sufficiently detailed.</p></li>`;
     return;
   }
   list.innerHTML = shown.map((q, i) => `
     <li class="question-item">
-      <div class="question-meta">Question ${i + 1}</div>
       <p>${escHtml(q)}</p>
     </li>
   `).join('');
@@ -189,7 +190,6 @@ function renderSummary(issues, score, status) {
   const numEl = document.getElementById('sum-score-num');
   const barEl = document.getElementById('sum-score-bar');
   const stEl  = document.getElementById('sum-status');
-  const descEl = document.getElementById('sum-desc');
   const topEl = document.getElementById('sum-top-issues');
 
   if (numEl) numEl.textContent = `${pct}%`;
@@ -199,33 +199,26 @@ function renderSummary(issues, score, status) {
     barEl.style.background = color;
   }
 
-  const label = status || (isGreen ? 'Ready for Engineering' : isAmber ? 'Needs Improvement' : 'Low Quality PRD');
+  const label   = status || (isGreen ? 'Ready for Engineering' : isAmber ? 'Needs Improvement' : 'Low Quality PRD');
   const pillCls = isGreen ? 'status-green' : isAmber ? 'status-yellow' : 'status-red';
   if (stEl) {
     stEl.textContent = label;
     stEl.className   = `summary-status-pill ${pillCls}`;
   }
 
-  if (descEl) {
-    descEl.textContent = isGreen
-      ? 'Most requirements are clear and testable. Ready to hand off to engineering.'
-      : isAmber
-      ? 'Several sections lack concrete criteria or have unaddressed edge cases.'
-      : 'Significant gaps detected — resolve the issues below before handing to engineering.';
-  }
-
   if (topEl) {
     const top3 = issues.slice(0, 3);
     if (top3.length === 0) {
-      topEl.innerHTML = `<div class="summary-issue-row" style="color:#22c55e">✓ No issues detected — great PRD!</div>`;
+      topEl.innerHTML = `<div class="top-issue-row top-issue-ok">✓ No issues detected — this PRD looks great!</div>`;
     } else {
-      const bulletColor = (type) =>
-        type === 'ambiguity' ? '#f59e0b' :
-        type === 'missing_logic' ? '#ef4444' : '#3b82f6';
-      topEl.innerHTML = top3.map(issue => `
-        <div class="summary-issue-row">
-          <span class="summary-issue-bullet" style="background:${bulletColor(issue.type)}"></span>
-          <span>${escHtml(issue.explanation)}</span>
+      const bulletCls = (type) =>
+        type === 'ambiguity'     ? 'tib-red'   :
+        type === 'missing_logic' ? 'tib-amber' : 'tib-blue';
+      topEl.innerHTML = top3.map((issue, i) => `
+        <div class="top-issue-row">
+          <span class="top-issue-num">${i + 1}</span>
+          <span class="top-issue-bullet ${bulletCls(issue.type)}"></span>
+          <span class="top-issue-text">${escHtml(issue.explanation)}</span>
         </div>
       `).join('');
     }
