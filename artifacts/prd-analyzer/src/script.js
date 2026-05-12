@@ -337,9 +337,28 @@ function timeAgo(date) {
   return `${Math.floor(diff / 86400)}d ago`;
 }
 
+initNav();
 initTabs();
-loadHistory();
 loadDashboard();
+
+// ── Page navigation ───────────────────────────────────────────────────────────
+function initNav() {
+  document.querySelectorAll('.nav-link').forEach(link => {
+    link.addEventListener('click', () => showPage(link.dataset.page));
+  });
+}
+
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(l => {
+    l.classList.toggle('active', l.dataset.page === name);
+  });
+  const target = document.getElementById(`page-${name}`);
+  if (target) {
+    target.classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+}
 
 // ── Tab switching ─────────────────────────────────────────────────────────────
 function initTabs() {

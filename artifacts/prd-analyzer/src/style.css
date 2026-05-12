@@ -32,90 +32,203 @@ body {
 ====================================== */
 .container {
   width: 100%;
-  max-width: 1160px;
+  max-width: 800px;
   margin: 0 auto;
   padding: 0 24px;
 }
 
-.layout {
-  display: grid;
-  grid-template-columns: 1fr 320px;
-  gap: 24px;
-  align-items: start;
-  padding: 32px 0 48px;
-}
-
-.col-main {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  min-width: 0;
-}
-
-.col-sidebar {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  position: sticky;
-  top: 24px;
-}
-
 /* ======================================
-   HEADER
+   TOP NAV
 ====================================== */
-.site-header {
+.top-nav {
   background: #ffffff;
   border-bottom: 1px solid #e8eaed;
-  padding: 18px 0;
   position: sticky;
   top: 0;
   z-index: 100;
   box-shadow: 0 1px 4px rgba(0,0,0,0.05);
 }
 
-.header-inner {
+.nav-inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  height: 56px;
 }
 
-.header-brand {
+.nav-brand {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  text-decoration: none;
 }
 
-.header-icon {
-  width: 28px;
-  height: 28px;
+.nav-icon {
+  width: 22px;
+  height: 22px;
   color: #4f63e7;
   flex-shrink: 0;
 }
 
-.header-title {
-  font-size: 1.125rem;
+.nav-title {
+  font-size: 1rem;
   font-weight: 700;
   color: #1a1d23;
   letter-spacing: -0.3px;
 }
 
-.header-subtitle {
-  font-size: 0.75rem;
-  color: #7a8094;
-  font-weight: 400;
-  margin-top: 1px;
-}
-
-.header-badge {
-  font-size: 0.6875rem;
+.nav-badge {
+  font-size: 0.625rem;
   font-weight: 600;
   color: #4f63e7;
   background: #eef0fd;
   border: 1px solid #c7cdfa;
   border-radius: 999px;
-  padding: 3px 10px;
+  padding: 2px 8px;
   letter-spacing: 0.4px;
   text-transform: uppercase;
+}
+
+.nav-links {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.nav-link {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6b7280;
+  padding: 6px 14px;
+  border-radius: 8px;
+  transition: color 0.15s, background 0.15s;
+  position: relative;
+}
+
+.nav-link:hover {
+  color: #1a1d23;
+  background: #f4f5f7;
+}
+
+.nav-link.active {
+  color: #4f63e7;
+  font-weight: 600;
+  background: #eef0fd;
+}
+
+/* ======================================
+   PAGES
+====================================== */
+.page {
+  display: none;
+}
+
+.page.active {
+  display: block;
+}
+
+.page-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 32px 0 56px;
+}
+
+.page-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #e8eaed;
+  padding-bottom: 20px;
+}
+
+.page-heading-title {
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: #1a1d23;
+  letter-spacing: -0.5px;
+}
+
+.page-heading-sub {
+  font-size: 0.875rem;
+  color: #6b7280;
+  line-height: 1.55;
+}
+
+/* ======================================
+   PIPELINE (How it Works)
+====================================== */
+.pipeline {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.pipeline-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  background: #ffffff;
+  border: 1px solid #e8eaed;
+  border-radius: 12px;
+  padding: 18px 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.pipeline-num {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #4f63e7;
+  color: #ffffff;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.pipeline-body {
+  flex: 1;
+}
+
+.pipeline-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #1a1d23;
+  margin-bottom: 5px;
+}
+
+.pipeline-desc {
+  font-size: 0.8125rem;
+  color: #6b7280;
+  line-height: 1.65;
+}
+
+.pipeline-desc code {
+  font-family: 'Menlo', 'Consolas', monospace;
+  font-size: 0.75rem;
+  background: #f4f5f7;
+  border: 1px solid #e8eaed;
+  border-radius: 4px;
+  padding: 1px 5px;
+  color: #4f63e7;
+}
+
+.pipeline-arrow {
+  text-align: center;
+  font-size: 1rem;
+  color: #d1d5db;
+  padding: 4px 0;
+  line-height: 1;
 }
 
 /* ======================================

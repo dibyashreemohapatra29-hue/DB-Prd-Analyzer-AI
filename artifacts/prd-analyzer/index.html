@@ -18,320 +18,376 @@
   </head>
   <body>
 
-    <!-- HEADER -->
-    <header class="site-header">
+    <!-- TOP NAV -->
+    <nav class="top-nav">
       <div class="container">
-        <div class="header-inner">
-          <div class="header-brand">
-            <svg class="header-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <div class="nav-inner">
+          <div class="nav-brand">
+            <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
               <polyline points="14 2 14 8 20 8"/>
               <line x1="16" y1="13" x2="8" y2="13"/>
               <line x1="16" y1="17" x2="8" y2="17"/>
               <line x1="10" y1="9" x2="8" y2="9"/>
             </svg>
-            <div>
-              <h1 class="header-title">PRD Analyzer</h1>
-              <p class="header-subtitle">Identify gaps before engineers do</p>
-            </div>
+            <span class="nav-title">PRD Analyzer</span>
+            <span class="nav-badge">Beta</span>
           </div>
-          <div class="header-badge">Beta</div>
+          <ul class="nav-links">
+            <li><button class="nav-link active" data-page="analyzer">Analyzer</button></li>
+            <li><button class="nav-link" data-page="history">History</button></li>
+            <li><button class="nav-link" data-page="how">How it Works</button></li>
+          </ul>
         </div>
       </div>
-    </header>
+    </nav>
 
     <main class="main-content">
-      <div class="container">
-        <div class="layout">
 
-          <!-- LEFT COLUMN -->
-          <div class="col-main">
+      <!-- ══════════════════════════════════
+           PAGE: ANALYZER
+      ══════════════════════════════════ -->
+      <div class="page active" id="page-analyzer">
+        <div class="container page-container">
 
-            <!-- INPUT SECTION -->
-            <section class="card" id="input-section">
-              <div class="card-header">
-                <h2 class="section-title">
-                  <span class="section-icon">📋</span>
-                  Your Specification
-                </h2>
+          <!-- INPUT SECTION -->
+          <section class="card" id="input-section">
+            <div class="card-header">
+              <h2 class="section-title">
+                <span class="section-icon">📋</span>
+                Your Specification
+              </h2>
+            </div>
+            <div class="card-body">
+              <label class="field-label" for="prd-input">Paste your PRD or feature specification</label>
+              <textarea
+                id="prd-input"
+                class="prd-textarea"
+                placeholder="e.g. Build a user authentication flow that supports email/password login, OAuth with Google, and 2FA. Users should be able to reset their password via email. The session should expire after 30 minutes of inactivity..."
+                rows="10"
+              ></textarea>
+              <div class="input-actions">
+                <span class="char-count" id="char-count">0 characters</span>
+                <button class="btn btn-primary" id="analyze-btn">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"/>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                  </svg>
+                  Analyze PRD
+                </button>
               </div>
+            </div>
+          </section>
+
+          <!-- ERROR BANNER -->
+          <div class="error-banner hidden" id="error-banner"></div>
+
+          <!-- ANALYSIS BANNER -->
+          <div class="analysis-banner hidden" id="analysis-banner">
+            <div class="banner-label">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              Analyzing:
+            </div>
+            <p class="banner-text" id="banner-text"></p>
+          </div>
+
+          <!-- RESULTS AREA (hidden until analysis completes) -->
+          <div id="results-area" class="hidden">
+
+            <!-- SUMMARY CARD -->
+            <section class="card" id="summary-card">
               <div class="card-body">
-                <label class="field-label" for="prd-input">Paste your PRD or feature specification</label>
-                <textarea
-                  id="prd-input"
-                  class="prd-textarea"
-                  placeholder="e.g. Build a user authentication flow that supports email/password login, OAuth with Google, and 2FA. Users should be able to reset their password via email. The session should expire after 30 minutes of inactivity..."
-                  rows="10"
-                ></textarea>
-                <div class="input-actions">
-                  <span class="char-count" id="char-count">0 characters</span>
-                  <button class="btn btn-primary" id="analyze-btn">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                      <circle cx="11" cy="11" r="8"/>
-                      <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                    </svg>
-                    Analyze PRD
-                  </button>
+                <div class="summary-layout">
+                  <div class="summary-score-block">
+                    <div class="summary-score-num" id="sum-score-num">–</div>
+                    <div class="summary-score-bar-track">
+                      <div class="summary-score-bar" id="sum-score-bar" style="width:0%"></div>
+                    </div>
+                    <div class="summary-score-caption">Confidence Score</div>
+                  </div>
+                  <div class="summary-divider"></div>
+                  <div class="summary-info">
+                    <span class="summary-status-pill" id="sum-status"></span>
+                    <p class="summary-desc" id="sum-desc"></p>
+                    <div class="summary-top-issues" id="sum-top-issues"></div>
+                  </div>
                 </div>
               </div>
             </section>
 
-            <!-- ERROR BANNER -->
-            <div class="error-banner hidden" id="error-banner"></div>
-
-            <!-- ANALYSIS BANNER -->
-            <div class="analysis-banner hidden" id="analysis-banner">
-              <div class="banner-label">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="20 6 9 17 4 12"/>
-                </svg>
-                Analyzing:
+            <!-- TABBED DETAILS CARD -->
+            <section class="card" id="details-card">
+              <div class="tab-bar">
+                <button class="tab-btn active" data-tab="issues">
+                  Issues
+                  <span class="tab-count" id="tab-count-issues">0</span>
+                </button>
+                <button class="tab-btn" data-tab="edge">
+                  Edge Cases
+                </button>
+                <button class="tab-btn" data-tab="assumptions">
+                  Assumptions
+                </button>
+                <button class="tab-btn" data-tab="questions">
+                  Questions
+                  <span class="tab-count" id="tab-count-questions">0</span>
+                </button>
               </div>
-              <p class="banner-text" id="banner-text"></p>
-            </div>
 
-            <!-- RESULTS AREA (hidden until analysis completes) -->
-            <div id="results-area" class="hidden">
+              <div class="tab-body">
 
-              <!-- SUMMARY CARD -->
-              <section class="card" id="summary-card">
-                <div class="card-body">
-                  <div class="summary-layout">
-                    <div class="summary-score-block">
-                      <div class="summary-score-num" id="sum-score-num">–</div>
-                      <div class="summary-score-bar-track">
-                        <div class="summary-score-bar" id="sum-score-bar" style="width:0%"></div>
+                <!-- ISSUES TAB -->
+                <div class="tab-panel active" id="tab-issues">
+                  <div class="subsection">
+                    <h3 class="subsection-title">
+                      <span class="dot dot-amber"></span>
+                      Ambiguity
+                      <span class="group-count" id="count-ambiguity"></span>
+                    </h3>
+                    <div id="ambiguity-list"></div>
+                  </div>
+                  <div class="subsection">
+                    <h3 class="subsection-title">
+                      <span class="dot dot-red"></span>
+                      Missing Logic
+                      <span class="group-count" id="count-missing"></span>
+                    </h3>
+                    <div id="missing-list"></div>
+                  </div>
+                  <div class="subsection">
+                    <h3 class="subsection-title">
+                      <span class="dot dot-blue"></span>
+                      Undefined Inputs
+                      <span class="group-count" id="count-undefined"></span>
+                    </h3>
+                    <div id="undefined-list"></div>
+                  </div>
+                </div>
+
+                <!-- EDGE CASES TAB -->
+                <div class="tab-panel" id="tab-edge">
+                  <ul class="edge-list">
+                    <li class="edge-item">
+                      <span class="edge-num">01</span>
+                      <div>
+                        <strong>Concurrent sessions</strong>
+                        <p>What happens when the same user logs in from two devices simultaneously? Are sessions independent or mutually exclusive?</p>
                       </div>
-                      <div class="summary-score-caption">Confidence Score</div>
+                    </li>
+                    <li class="edge-item">
+                      <span class="edge-num">02</span>
+                      <div>
+                        <strong>Token expiry during active use</strong>
+                        <p>If a user is mid-form when their session expires, what is the expected behavior — silent refresh or hard redirect?</p>
+                      </div>
+                    </li>
+                    <li class="edge-item">
+                      <span class="edge-num">03</span>
+                      <div>
+                        <strong>Email address change</strong>
+                        <p>Spec does not address what happens to existing sessions if a user changes their email address.</p>
+                      </div>
+                    </li>
+                    <li class="edge-item">
+                      <span class="edge-num">04</span>
+                      <div>
+                        <strong>Account deletion mid-flow</strong>
+                        <p>If an account is deleted while the user is logged in, the session must be invalidated — this is unspecified.</p>
+                      </div>
+                    </li>
+                    <li class="edge-item">
+                      <span class="edge-num">05</span>
+                      <div>
+                        <strong>Offline / network failure during auth</strong>
+                        <p>Network interruption during OAuth redirect is not covered. User experience for this state is undefined.</p>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+
+                <!-- ASSUMPTIONS TAB -->
+                <div class="tab-panel" id="tab-assumptions">
+                  <div class="assumption-grid">
+                    <div class="assumption-card">
+                      <div class="assumption-label">Assumed</div>
+                      <p>All users have a valid email address. No mention of phone-number-only accounts.</p>
                     </div>
-                    <div class="summary-divider"></div>
-                    <div class="summary-info">
-                      <span class="summary-status-pill" id="sum-status"></span>
-                      <p class="summary-desc" id="sum-desc"></p>
-                      <div class="summary-top-issues" id="sum-top-issues"></div>
+                    <div class="assumption-card">
+                      <div class="assumption-label">Assumed</div>
+                      <p>The product is web-only. Mobile app session handling may differ and is not covered.</p>
+                    </div>
+                    <div class="assumption-card">
+                      <div class="assumption-label">Assumed</div>
+                      <p>Third-party OAuth providers (Google) will always be available. No fallback is specified.</p>
+                    </div>
+                    <div class="assumption-card">
+                      <div class="assumption-label">Assumed</div>
+                      <p>Email delivery is instantaneous. No SLA or retry logic defined for password reset emails.</p>
                     </div>
                   </div>
                 </div>
-              </section>
 
-              <!-- TABBED DETAILS CARD -->
-              <section class="card" id="details-card">
-                <div class="tab-bar">
-                  <button class="tab-btn active" data-tab="issues">
-                    Issues
-                    <span class="tab-count" id="tab-count-issues">0</span>
-                  </button>
-                  <button class="tab-btn" data-tab="edge">
-                    Edge Cases
-                  </button>
-                  <button class="tab-btn" data-tab="assumptions">
-                    Assumptions
-                  </button>
-                  <button class="tab-btn" data-tab="questions">
-                    Questions
-                    <span class="tab-count" id="tab-count-questions">0</span>
-                  </button>
+                <!-- QUESTIONS TAB -->
+                <div class="tab-panel" id="tab-questions">
+                  <ol class="question-list" id="question-list"></ol>
                 </div>
 
-                <div class="tab-body">
-
-                  <!-- ISSUES TAB -->
-                  <div class="tab-panel active" id="tab-issues">
-                    <div class="subsection">
-                      <h3 class="subsection-title">
-                        <span class="dot dot-amber"></span>
-                        Ambiguity
-                        <span class="group-count" id="count-ambiguity"></span>
-                      </h3>
-                      <div id="ambiguity-list"></div>
-                    </div>
-                    <div class="subsection">
-                      <h3 class="subsection-title">
-                        <span class="dot dot-red"></span>
-                        Missing Logic
-                        <span class="group-count" id="count-missing"></span>
-                      </h3>
-                      <div id="missing-list"></div>
-                    </div>
-                    <div class="subsection">
-                      <h3 class="subsection-title">
-                        <span class="dot dot-blue"></span>
-                        Undefined Inputs
-                        <span class="group-count" id="count-undefined"></span>
-                      </h3>
-                      <div id="undefined-list"></div>
-                    </div>
-                  </div>
-
-                  <!-- EDGE CASES TAB -->
-                  <div class="tab-panel" id="tab-edge">
-                    <ul class="edge-list">
-                      <li class="edge-item">
-                        <span class="edge-num">01</span>
-                        <div>
-                          <strong>Concurrent sessions</strong>
-                          <p>What happens when the same user logs in from two devices simultaneously? Are sessions independent or mutually exclusive?</p>
-                        </div>
-                      </li>
-                      <li class="edge-item">
-                        <span class="edge-num">02</span>
-                        <div>
-                          <strong>Token expiry during active use</strong>
-                          <p>If a user is mid-form when their session expires, what is the expected behavior — silent refresh or hard redirect?</p>
-                        </div>
-                      </li>
-                      <li class="edge-item">
-                        <span class="edge-num">03</span>
-                        <div>
-                          <strong>Email address change</strong>
-                          <p>Spec does not address what happens to existing sessions if a user changes their email address.</p>
-                        </div>
-                      </li>
-                      <li class="edge-item">
-                        <span class="edge-num">04</span>
-                        <div>
-                          <strong>Account deletion mid-flow</strong>
-                          <p>If an account is deleted while the user is logged in, the session must be invalidated — this is unspecified.</p>
-                        </div>
-                      </li>
-                      <li class="edge-item">
-                        <span class="edge-num">05</span>
-                        <div>
-                          <strong>Offline / network failure during auth</strong>
-                          <p>Network interruption during OAuth redirect is not covered. User experience for this state is undefined.</p>
-                        </div>
-                      </li>
-                    </ul>
-                  </div>
-
-                  <!-- ASSUMPTIONS TAB -->
-                  <div class="tab-panel" id="tab-assumptions">
-                    <div class="assumption-grid">
-                      <div class="assumption-card">
-                        <div class="assumption-label">Assumed</div>
-                        <p>All users have a valid email address. No mention of phone-number-only accounts.</p>
-                      </div>
-                      <div class="assumption-card">
-                        <div class="assumption-label">Assumed</div>
-                        <p>The product is web-only. Mobile app session handling may differ and is not covered.</p>
-                      </div>
-                      <div class="assumption-card">
-                        <div class="assumption-label">Assumed</div>
-                        <p>Third-party OAuth providers (Google) will always be available. No fallback is specified.</p>
-                      </div>
-                      <div class="assumption-card">
-                        <div class="assumption-label">Assumed</div>
-                        <p>Email delivery is instantaneous. No SLA or retry logic defined for password reset emails.</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- QUESTIONS TAB -->
-                  <div class="tab-panel" id="tab-questions">
-                    <ol class="question-list" id="question-list"></ol>
-                  </div>
-
-                </div>
-              </section>
-
-            </div>
-
-            <!-- ADMIN DASHBOARD -->
-            <section class="card" id="admin-dashboard">
-              <div class="card-header">
-                <h2 class="section-title">
-                  <span class="section-icon">🗂️</span>
-                  Admin Dashboard
-                </h2>
-                <span class="badge badge-neutral" id="dashboard-badge">Loading…</span>
-              </div>
-              <div class="card-body">
-                <div class="dashboard-grid" id="dashboard-grid">
-                  <div class="dash-loading">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
-                    Fetching stored analyses…
-                  </div>
-                </div>
               </div>
             </section>
 
           </div>
 
-          <!-- RIGHT COLUMN: History -->
-          <aside class="col-sidebar">
-            <section class="card history-card">
-              <div class="card-header">
-                <h2 class="section-title">
-                  <span class="section-icon">🕐</span>
-                  Previous Analyses
-                </h2>
-              </div>
-              <div class="card-body p-0">
-                <ul class="history-list">
-                  <li class="history-item history-item-active">
-                    <div class="history-top">
-                      <span class="history-title">User Auth Flow</span>
-                      <span class="history-score score-med">60%</span>
-                    </div>
-                    <p class="history-snippet">Email/password login, OAuth with Google, 2FA, session expiry...</p>
-                    <div class="history-meta">
-                      <span>3 issues · 5 edge cases</span>
-                      <span>Just now</span>
-                    </div>
-                  </li>
-                  <li class="history-item">
-                    <div class="history-top">
-                      <span class="history-title">Checkout &amp; Payments</span>
-                      <span class="history-score score-high">84%</span>
-                    </div>
-                    <p class="history-snippet">Multi-step checkout, Stripe integration, discount codes, order confirmations...</p>
-                    <div class="history-meta">
-                      <span>1 issue · 2 edge cases</span>
-                      <span>2 days ago</span>
-                    </div>
-                  </li>
-                  <li class="history-item">
-                    <div class="history-top">
-                      <span class="history-title">Notification System</span>
-                      <span class="history-score score-low">41%</span>
-                    </div>
-                    <p class="history-snippet">Push notifications, email digests, in-app alerts, user preferences...</p>
-                    <div class="history-meta">
-                      <span>7 issues · 9 edge cases</span>
-                      <span>5 days ago</span>
-                    </div>
-                  </li>
-                </ul>
-              </div>
-            </section>
+        </div>
+      </div>
 
-            <section class="card tips-card">
-              <div class="card-header">
-                <h2 class="section-title tips-title">
-                  <span class="section-icon">✨</span>
-                  Tips for Better PRDs
-                </h2>
-              </div>
-              <div class="card-body">
-                <ul class="tips-list">
-                  <li>Define explicit acceptance criteria for every feature.</li>
-                  <li>Specify error states alongside happy paths.</li>
-                  <li>Include concrete numeric values — never "reasonable" or "quick".</li>
-                  <li>Name every actor, system, and external dependency.</li>
-                </ul>
-              </div>
-            </section>
-          </aside>
+      <!-- ══════════════════════════════════
+           PAGE: HISTORY
+      ══════════════════════════════════ -->
+      <div class="page" id="page-history">
+        <div class="container page-container">
+
+          <div class="page-heading">
+            <h2 class="page-heading-title">Analysis History</h2>
+            <p class="page-heading-sub">All PRD analyses stored in your workspace. Click any card to expand details.</p>
+            <span class="badge badge-neutral" id="dashboard-badge" style="align-self:flex-start">Loading…</span>
+          </div>
+
+          <div class="dashboard-grid" id="dashboard-grid">
+            <div class="dash-loading">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+              Fetching stored analyses…
+            </div>
+          </div>
+
+          <section class="card tips-card">
+            <div class="card-header">
+              <h2 class="section-title tips-title">
+                <span class="section-icon">✨</span>
+                Tips for Better PRDs
+              </h2>
+            </div>
+            <div class="card-body">
+              <ul class="tips-list">
+                <li>Define explicit acceptance criteria for every feature.</li>
+                <li>Specify error states alongside happy paths.</li>
+                <li>Include concrete numeric values — never "reasonable" or "quick".</li>
+                <li>Name every actor, system, and external dependency.</li>
+              </ul>
+            </div>
+          </section>
 
         </div>
       </div>
-    </main>
 
-    <footer class="site-footer">
-      <div class="container">
-        <p>PRD Analyzer &mdash; Catch gaps before engineers do.</p>
+      <!-- ══════════════════════════════════
+           PAGE: HOW IT WORKS
+      ══════════════════════════════════ -->
+      <div class="page" id="page-how">
+        <div class="container page-container">
+
+          <div class="page-heading">
+            <h2 class="page-heading-title">How it Works</h2>
+            <p class="page-heading-sub">A PRD analysis runs through nine stages from input to results.</p>
+          </div>
+
+          <div class="pipeline">
+
+            <div class="pipeline-step">
+              <div class="pipeline-num">1</div>
+              <div class="pipeline-body">
+                <h3 class="pipeline-title">Input</h3>
+                <p class="pipeline-desc">You paste raw PRD or feature specification text. The minimum is 50 characters — too short and there's nothing meaningful to analyze.</p>
+              </div>
+            </div>
+
+            <div class="pipeline-arrow">↓</div>
+
+            <div class="pipeline-step">
+              <div class="pipeline-num">2</div>
+              <div class="pipeline-body">
+                <h3 class="pipeline-title">Validation</h3>
+                <p class="pipeline-desc">The backend checks length, content type, and structure. Malformed or empty requests are rejected immediately with a clear error message.</p>
+              </div>
+            </div>
+
+            <div class="pipeline-arrow">↓</div>
+
+            <div class="pipeline-step">
+              <div class="pipeline-num">3</div>
+              <div class="pipeline-body">
+                <h3 class="pipeline-title">Rules Engine</h3>
+                <p class="pipeline-desc">A local rule engine scans for known anti-patterns: vague words ("reasonable", "fast", "some"), missing actors, undefined inputs, and absent error handling.</p>
+              </div>
+            </div>
+
+            <div class="pipeline-arrow">↓</div>
+
+            <div class="pipeline-step">
+              <div class="pipeline-num">4</div>
+              <div class="pipeline-body">
+                <h3 class="pipeline-title">Prompt Building</h3>
+                <p class="pipeline-desc">Rule findings and your PRD are assembled into a structured prompt. The format constrains the AI to return machine-readable JSON with typed issue objects.</p>
+              </div>
+            </div>
+
+            <div class="pipeline-arrow">↓</div>
+
+            <div class="pipeline-step">
+              <div class="pipeline-num">5</div>
+              <div class="pipeline-body">
+                <h3 class="pipeline-title">Groq LLM</h3>
+                <p class="pipeline-desc">The prompt is sent to Groq's <code>compound-beta-mini</code> model — a fast inference model tuned for structured reasoning. Response latency is typically under 2 seconds.</p>
+              </div>
+            </div>
+
+            <div class="pipeline-arrow">↓</div>
+
+            <div class="pipeline-step">
+              <div class="pipeline-num">6</div>
+              <div class="pipeline-body">
+                <h3 class="pipeline-title">Response Parsing</h3>
+                <p class="pipeline-desc">The raw model output is extracted from markdown code fences, parsed as JSON, and validated. Issues are typed (ambiguity, missing_logic, undefined_input) and capped at 3 per analysis.</p>
+              </div>
+            </div>
+
+            <div class="pipeline-arrow">↓</div>
+
+            <div class="pipeline-step">
+              <div class="pipeline-num">7</div>
+              <div class="pipeline-body">
+                <h3 class="pipeline-title">Confidence Score</h3>
+                <p class="pipeline-desc">A score from 0–100% is computed from issue count: 0–1 issues → above 70% (Ready), 2–4 → 40–70% (Needs Improvement), 5+ → below 40% (Low Quality).</p>
+              </div>
+            </div>
+
+            <div class="pipeline-arrow">↓</div>
+
+            <div class="pipeline-step">
+              <div class="pipeline-num">8</div>
+              <div class="pipeline-body">
+                <h3 class="pipeline-title">Supabase Storage</h3>
+                <p class="pipeline-desc">Each result is persisted to a Supabase PostgreSQL table (<code>prd_analysis</code>) with the full PRD text, issues, questions, score, and timestamp. This powers the History page.</p>
+              </div>
+            </div>
+
+            <div class="pipeline-arrow">↓</div>
+
+            <div class="pipeline-step">
+              <div class="pipeline-num">9</div>
+              <div class="pipeline-body">
+                <h3 class="pipeline-title">UI Results</h3>
+                <p class="pipeline-desc">The frontend renders a summary card (score + status + top issues) and a tabbed detail view (Issues / Edge Cases / Assumptions / Questions) — no page reload required.</p>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
       </div>
-    </footer>
+
+    </main>
 
     <script type="module" src="/src/script.js"></script>
   </body>
