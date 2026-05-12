@@ -90,231 +90,151 @@
               <p class="banner-text" id="banner-text"></p>
             </div>
 
-            <!-- DETECTED ISSUES -->
-            <section class="card" id="issues-section">
-              <div class="card-header">
-                <h2 class="section-title">
-                  <span class="section-icon">⚠️</span>
-                  Detected Issues
-                </h2>
-                <span class="badge badge-warning" id="issues-badge">3 found</span>
-              </div>
-              <div class="card-body">
+            <!-- RESULTS AREA (hidden until analysis completes) -->
+            <div id="results-area" class="hidden">
 
-                <div class="subsection">
-                  <h3 class="subsection-title">
-                    <span class="dot dot-amber"></span>
-                    Ambiguity
-                  </h3>
-                  <div id="ambiguity-list">
-                    <div class="issue-card">
-                      <div class="issue-header">
-                        <span class="issue-tag tag-amber">Ambiguous</span>
-                        <span class="issue-loc">§ Authentication Flow</span>
+              <!-- SUMMARY CARD -->
+              <section class="card" id="summary-card">
+                <div class="card-body">
+                  <div class="summary-layout">
+                    <div class="summary-score-block">
+                      <div class="summary-score-num" id="sum-score-num">–</div>
+                      <div class="summary-score-bar-track">
+                        <div class="summary-score-bar" id="sum-score-bar" style="width:0%"></div>
                       </div>
-                      <p class="issue-text">"Users should be notified" — unclear whether this means email, in-app notification, SMS, or all three.</p>
+                      <div class="summary-score-caption">Confidence Score</div>
                     </div>
-                    <div class="issue-card">
-                      <div class="issue-header">
-                        <span class="issue-tag tag-amber">Ambiguous</span>
-                        <span class="issue-loc">§ Session Management</span>
-                      </div>
-                      <p class="issue-text">"After a reasonable time" is not a concrete value. Engineers need a specific timeout duration.</p>
+                    <div class="summary-divider"></div>
+                    <div class="summary-info">
+                      <span class="summary-status-pill" id="sum-status"></span>
+                      <p class="summary-desc" id="sum-desc"></p>
+                      <div class="summary-top-issues" id="sum-top-issues"></div>
                     </div>
                   </div>
                 </div>
+              </section>
 
-                <div class="subsection">
-                  <h3 class="subsection-title">
-                    <span class="dot dot-red"></span>
-                    Missing Logic
-                  </h3>
-                  <div id="missing-list">
-                    <div class="issue-card issue-card-red">
-                      <div class="issue-header">
-                        <span class="issue-tag tag-red">Missing Logic</span>
-                        <span class="issue-loc">§ Error Handling</span>
-                      </div>
-                      <p class="issue-text">No specification for what happens when a login attempt fails 5+ times. Rate limiting behavior is undefined.</p>
-                    </div>
-                  </div>
+              <!-- TABBED DETAILS CARD -->
+              <section class="card" id="details-card">
+                <div class="tab-bar">
+                  <button class="tab-btn active" data-tab="issues">
+                    Issues
+                    <span class="tab-count" id="tab-count-issues">0</span>
+                  </button>
+                  <button class="tab-btn" data-tab="edge">
+                    Edge Cases
+                  </button>
+                  <button class="tab-btn" data-tab="assumptions">
+                    Assumptions
+                  </button>
+                  <button class="tab-btn" data-tab="questions">
+                    Questions
+                    <span class="tab-count" id="tab-count-questions">0</span>
+                  </button>
                 </div>
 
-                <div class="subsection">
-                  <h3 class="subsection-title">
-                    <span class="dot dot-blue"></span>
-                    Undefined Inputs
-                  </h3>
-                  <div id="undefined-list">
-                    <div class="issue-card issue-card-blue">
-                      <div class="issue-header">
-                        <span class="issue-tag tag-blue">Undefined Input</span>
-                        <span class="issue-loc">§ User Profile</span>
-                      </div>
-                      <p class="issue-text">The required fields for user profile creation are not listed. Password complexity rules are absent.</p>
+                <div class="tab-body">
+
+                  <!-- ISSUES TAB -->
+                  <div class="tab-panel active" id="tab-issues">
+                    <div class="subsection">
+                      <h3 class="subsection-title">
+                        <span class="dot dot-amber"></span>
+                        Ambiguity
+                        <span class="group-count" id="count-ambiguity"></span>
+                      </h3>
+                      <div id="ambiguity-list"></div>
+                    </div>
+                    <div class="subsection">
+                      <h3 class="subsection-title">
+                        <span class="dot dot-red"></span>
+                        Missing Logic
+                        <span class="group-count" id="count-missing"></span>
+                      </h3>
+                      <div id="missing-list"></div>
+                    </div>
+                    <div class="subsection">
+                      <h3 class="subsection-title">
+                        <span class="dot dot-blue"></span>
+                        Undefined Inputs
+                        <span class="group-count" id="count-undefined"></span>
+                      </h3>
+                      <div id="undefined-list"></div>
                     </div>
                   </div>
+
+                  <!-- EDGE CASES TAB -->
+                  <div class="tab-panel" id="tab-edge">
+                    <ul class="edge-list">
+                      <li class="edge-item">
+                        <span class="edge-num">01</span>
+                        <div>
+                          <strong>Concurrent sessions</strong>
+                          <p>What happens when the same user logs in from two devices simultaneously? Are sessions independent or mutually exclusive?</p>
+                        </div>
+                      </li>
+                      <li class="edge-item">
+                        <span class="edge-num">02</span>
+                        <div>
+                          <strong>Token expiry during active use</strong>
+                          <p>If a user is mid-form when their session expires, what is the expected behavior — silent refresh or hard redirect?</p>
+                        </div>
+                      </li>
+                      <li class="edge-item">
+                        <span class="edge-num">03</span>
+                        <div>
+                          <strong>Email address change</strong>
+                          <p>Spec does not address what happens to existing sessions if a user changes their email address.</p>
+                        </div>
+                      </li>
+                      <li class="edge-item">
+                        <span class="edge-num">04</span>
+                        <div>
+                          <strong>Account deletion mid-flow</strong>
+                          <p>If an account is deleted while the user is logged in, the session must be invalidated — this is unspecified.</p>
+                        </div>
+                      </li>
+                      <li class="edge-item">
+                        <span class="edge-num">05</span>
+                        <div>
+                          <strong>Offline / network failure during auth</strong>
+                          <p>Network interruption during OAuth redirect is not covered. User experience for this state is undefined.</p>
+                        </div>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <!-- ASSUMPTIONS TAB -->
+                  <div class="tab-panel" id="tab-assumptions">
+                    <div class="assumption-grid">
+                      <div class="assumption-card">
+                        <div class="assumption-label">Assumed</div>
+                        <p>All users have a valid email address. No mention of phone-number-only accounts.</p>
+                      </div>
+                      <div class="assumption-card">
+                        <div class="assumption-label">Assumed</div>
+                        <p>The product is web-only. Mobile app session handling may differ and is not covered.</p>
+                      </div>
+                      <div class="assumption-card">
+                        <div class="assumption-label">Assumed</div>
+                        <p>Third-party OAuth providers (Google) will always be available. No fallback is specified.</p>
+                      </div>
+                      <div class="assumption-card">
+                        <div class="assumption-label">Assumed</div>
+                        <p>Email delivery is instantaneous. No SLA or retry logic defined for password reset emails.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- QUESTIONS TAB -->
+                  <div class="tab-panel" id="tab-questions">
+                    <ol class="question-list" id="question-list"></ol>
+                  </div>
+
                 </div>
+              </section>
 
-              </div>
-            </section>
-
-            <!-- EDGE CASES -->
-            <section class="card">
-              <div class="card-header">
-                <h2 class="section-title">
-                  <span class="section-icon">🔍</span>
-                  Missing Edge Cases
-                </h2>
-                <span class="badge badge-red">5 missing</span>
-              </div>
-              <div class="card-body">
-                <ul class="edge-list">
-                  <li class="edge-item">
-                    <span class="edge-num">01</span>
-                    <div>
-                      <strong>Concurrent sessions</strong>
-                      <p>What happens when the same user logs in from two devices simultaneously? Are sessions independent or mutually exclusive?</p>
-                    </div>
-                  </li>
-                  <li class="edge-item">
-                    <span class="edge-num">02</span>
-                    <div>
-                      <strong>Token expiry during active use</strong>
-                      <p>If a user is mid-form when their session expires, what is the expected behavior — silent refresh or hard redirect?</p>
-                    </div>
-                  </li>
-                  <li class="edge-item">
-                    <span class="edge-num">03</span>
-                    <div>
-                      <strong>Email address change</strong>
-                      <p>Spec does not address what happens to existing sessions if a user changes their email address.</p>
-                    </div>
-                  </li>
-                  <li class="edge-item">
-                    <span class="edge-num">04</span>
-                    <div>
-                      <strong>Account deletion mid-flow</strong>
-                      <p>If an account is deleted while the user is logged in, the session must be invalidated — this is unspecified.</p>
-                    </div>
-                  </li>
-                  <li class="edge-item">
-                    <span class="edge-num">05</span>
-                    <div>
-                      <strong>Offline / network failure during auth</strong>
-                      <p>Network interruption during OAuth redirect is not covered. User experience for this state is undefined.</p>
-                    </div>
-                  </li>
-                </ul>
-              </div>
-            </section>
-
-            <!-- ASSUMPTIONS -->
-            <section class="card">
-              <div class="card-header">
-                <h2 class="section-title">
-                  <span class="section-icon">💡</span>
-                  Undefined Assumptions
-                </h2>
-                <span class="badge badge-purple">4 assumptions</span>
-              </div>
-              <div class="card-body">
-                <div class="assumption-grid">
-                  <div class="assumption-card">
-                    <div class="assumption-label">Assumed</div>
-                    <p>All users have a valid email address. No mention of phone-number-only accounts.</p>
-                  </div>
-                  <div class="assumption-card">
-                    <div class="assumption-label">Assumed</div>
-                    <p>The product is web-only. Mobile app session handling may differ and is not covered.</p>
-                  </div>
-                  <div class="assumption-card">
-                    <div class="assumption-label">Assumed</div>
-                    <p>Third-party OAuth providers (Google) will always be available. No fallback is specified.</p>
-                  </div>
-                  <div class="assumption-card">
-                    <div class="assumption-label">Assumed</div>
-                    <p>Email delivery is instantaneous. No SLA or retry logic defined for password reset emails.</p>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <!-- CLARIFYING QUESTIONS -->
-            <section class="card">
-              <div class="card-header">
-                <h2 class="section-title">
-                  <span class="section-icon">❓</span>
-                  Clarifying Questions
-                </h2>
-                <span class="badge badge-neutral" id="questions-badge">3 questions</span>
-              </div>
-              <div class="card-body">
-                <ol class="question-list" id="question-list">
-                  <li class="question-item">
-                    <div class="question-meta">Priority: High</div>
-                    <p>What is the exact session timeout duration, and does inactivity reset the timer or does the clock run from first login?</p>
-                  </li>
-                  <li class="question-item">
-                    <div class="question-meta">Priority: High</div>
-                    <p>Should failed login attempts lock the account, throttle requests, or trigger a CAPTCHA? What is the threshold?</p>
-                  </li>
-                  <li class="question-item">
-                    <div class="question-meta">Priority: Medium</div>
-                    <p>Is 2FA mandatory for all users, optional, or role-dependent (e.g. admins only)?</p>
-                  </li>
-                </ol>
-              </div>
-            </section>
-
-            <!-- CONFIDENCE SCORE -->
-            <section class="card">
-              <div class="card-header">
-                <h2 class="section-title">
-                  <span class="section-icon">📊</span>
-                  Confidence Score
-                </h2>
-              </div>
-              <div class="card-body">
-                <div class="score-layout">
-                  <div class="score-circle">
-                    <svg viewBox="0 0 120 120" class="score-svg">
-                      <circle class="score-bg" cx="60" cy="60" r="50"/>
-                      <circle class="score-ring" id="score-ring" cx="60" cy="60" r="50" stroke-dasharray="188 314"/>
-                    </svg>
-                    <div class="score-label">
-                      <span class="score-num" id="score-num">60%</span>
-                      <span class="score-sub">clarity</span>
-                    </div>
-                  </div>
-                  <div class="score-detail">
-                    <p class="score-summary" id="score-summary">This specification has <strong>moderate clarity</strong>. Several sections lack concrete acceptance criteria, and multiple edge cases are unaddressed.</p>
-                    <div class="score-bars">
-                      <div class="score-bar-row">
-                        <span class="score-bar-label">Completeness</span>
-                        <div class="score-bar-track"><div class="score-bar-fill" data-key="completeness" style="width: 55%"></div></div>
-                        <span class="score-bar-pct">–</span>
-                      </div>
-                      <div class="score-bar-row">
-                        <span class="score-bar-label">Clarity</span>
-                        <div class="score-bar-track"><div class="score-bar-fill" data-key="clarity" style="width: 62%"></div></div>
-                        <span class="score-bar-pct">–</span>
-                      </div>
-                      <div class="score-bar-row">
-                        <span class="score-bar-label">Edge Cases</span>
-                        <div class="score-bar-track"><div class="score-bar-fill score-bar-low" data-key="edge" style="width: 30%"></div></div>
-                        <span class="score-bar-pct">–</span>
-                      </div>
-                      <div class="score-bar-row">
-                        <span class="score-bar-label">Testability</span>
-                        <div class="score-bar-track"><div class="score-bar-fill" data-key="test" style="width: 70%"></div></div>
-                        <span class="score-bar-pct">–</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
+            </div>
 
             <!-- ADMIN DASHBOARD -->
             <section class="card" id="admin-dashboard">

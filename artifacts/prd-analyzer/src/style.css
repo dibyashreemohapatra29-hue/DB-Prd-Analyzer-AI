@@ -21,6 +21,13 @@ body {
 }
 
 /* ======================================
+   UTILITIES
+====================================== */
+.hidden {
+  display: none !important;
+}
+
+/* ======================================
    LAYOUT
 ====================================== */
 .container {
@@ -877,6 +884,222 @@ body {
 .spin {
   animation: spin 0.8s linear infinite;
   display: inline-block;
+}
+
+/* ======================================
+   RESULTS AREA
+====================================== */
+#results-area {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ======================================
+   SUMMARY CARD
+====================================== */
+.summary-layout {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+}
+
+.summary-score-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-width: 130px;
+  padding: 4px 24px 4px 4px;
+}
+
+.summary-score-num {
+  font-size: 2.75rem;
+  font-weight: 800;
+  letter-spacing: -2px;
+  color: #1a1d23;
+  line-height: 1;
+}
+
+.summary-score-bar-track {
+  width: 100%;
+  height: 7px;
+  background: #e8eaed;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.summary-score-bar {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s;
+}
+
+.summary-score-caption {
+  font-size: 0.6875rem;
+  color: #9ca3af;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.summary-divider {
+  width: 1px;
+  background: #e8eaed;
+  margin: 0 24px;
+  flex-shrink: 0;
+}
+
+.summary-info {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+  justify-content: center;
+}
+
+.summary-status-pill {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 999px;
+  align-self: flex-start;
+  letter-spacing: 0.2px;
+}
+
+.summary-desc {
+  font-size: 0.8125rem;
+  color: #6b7280;
+  line-height: 1.55;
+}
+
+.summary-top-issues {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.summary-issue-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 0.8125rem;
+  color: #374151;
+  line-height: 1.5;
+}
+
+.summary-issue-bullet {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+
+@media (max-width: 600px) {
+  .summary-layout {
+    flex-direction: column;
+    gap: 16px;
+  }
+  .summary-divider {
+    width: 100%;
+    height: 1px;
+    margin: 0;
+  }
+  .summary-score-block {
+    flex-direction: row;
+    padding: 0;
+    min-width: unset;
+    gap: 14px;
+  }
+}
+
+/* ======================================
+   TABS
+====================================== */
+.tab-bar {
+  display: flex;
+  border-bottom: 1px solid #e8eaed;
+  padding: 0 20px;
+  gap: 2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tab-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 13px 14px 11px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #6b7280;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.15s, border-color 0.15s;
+  position: relative;
+  bottom: -1px;
+}
+
+.tab-btn:hover {
+  color: #374151;
+}
+
+.tab-btn.active {
+  color: #4f63e7;
+  border-bottom-color: #4f63e7;
+  font-weight: 600;
+}
+
+.tab-count {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  background: #f0f1f4;
+  color: #6b7280;
+  padding: 1px 6px;
+  border-radius: 999px;
+  min-width: 20px;
+  text-align: center;
+}
+
+.tab-btn.active .tab-count {
+  background: #eaedfd;
+  color: #4f63e7;
+}
+
+.tab-body {
+  padding: 0;
+}
+
+.tab-panel {
+  display: none;
+  padding: 20px;
+  animation: fadeInTab 0.18s ease;
+}
+
+.tab-panel.active {
+  display: block;
+}
+
+@keyframes fadeInTab {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.group-count {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: #9ca3af;
+  margin-left: 2px;
 }
 
 /* ======================================

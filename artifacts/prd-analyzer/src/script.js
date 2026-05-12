@@ -118,13 +118,29 @@ function renderResults(data) {
   renderIssueSubsection('missing-list',   missing,    'tag-red',   'Missing Logic');
   renderIssueSubsection('undefined-list', undefined_, 'tag-blue',  'Undefined Input');
 
-  const badge = document.getElementById('issues-badge');
-  if (badge) badge.textContent = `${issues.length} found`;
+  setGroupCount('count-ambiguity', ambiguity.length);
+  setGroupCount('count-missing',   missing.length);
+  setGroupCount('count-undefined', undefined_.length);
+
+  const tabIssues = document.getElementById('tab-count-issues');
+  if (tabIssues) tabIssues.textContent = issues.length;
 
   renderQuestions(questions);
-  renderConfidence(confidence_score, status);
+  renderSummary(issues, confidence_score, status);
 
-  document.getElementById('issues-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const resultsArea = document.getElementById('results-area');
+  if (resultsArea) {
+    resultsArea.classList.remove('hidden');
+    resultsArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  activateTab('issues');
+}
+
+function setGroupCount(id, count) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = count > 0 ? `(${count})` : '';
 }
 
 function renderIssueSubsection(containerId, issues, tagClass, label) {
@@ -147,14 +163,16 @@ function renderIssueSubsection(containerId, issues, tagClass, label) {
 
 function renderQuestions(questions) {
   const list  = document.getElementById('question-list');
-  const badge = document.getElementById('questions-badge');
+  const tabCount = document.getElementById('tab-count-questions');
   if (!list) return;
-  if (badge) badge.textContent = `${questions.length} question${questions.length !== 1 ? 's' : ''}`;
-  if (questions.length === 0) {
+  if (tabCount) tabCount.textContent = questions.length;
+
+  const shown = questions.slice(0, 3);
+  if (shown.length === 0) {
     list.innerHTML = `<li class="question-item"><p>No additional clarifying questions — the PRD is sufficiently detailed.</p></li>`;
     return;
   }
-  list.innerHTML = questions.map((q, i) => `
+  list.innerHTML = shown.map((q, i) => `
     <li class="question-item">
       <div class="question-meta">Question ${i + 1}</div>
       <p>${escHtml(q)}</p>
@@ -162,60 +180,56 @@ function renderQuestions(questions) {
   `).join('');
 }
 
-function renderConfidence(score, status) {
-  const pct    = Math.round(score * 100);
-  const numEl  = document.getElementById('score-num');
-  const ringEl = document.getElementById('score-ring');
-  const barEls = document.querySelectorAll('.score-bar-fill[data-key]');
+function renderSummary(issues, score, status) {
+  const pct     = Math.round(score * 100);
+  const isGreen = pct >= 70;
+  const isAmber = pct >= 40 && pct < 70;
+  const color   = isGreen ? '#22c55e' : isAmber ? '#f59e0b' : '#ef4444';
 
-  const color = pct >= 70 ? '#22c55e' : pct >= 40 ? '#f59e0b' : '#ef4444';
+  const numEl = document.getElementById('sum-score-num');
+  const barEl = document.getElementById('sum-score-bar');
+  const stEl  = document.getElementById('sum-status');
+  const descEl = document.getElementById('sum-desc');
+  const topEl = document.getElementById('sum-top-issues');
 
   if (numEl) numEl.textContent = `${pct}%`;
 
-  if (ringEl) {
-    const circumference = 2 * Math.PI * 50;
-    const filled = (score * circumference).toFixed(1);
-    const rest   = (circumference - filled).toFixed(1);
-    ringEl.setAttribute('stroke-dasharray', `${filled} ${rest}`);
-    ringEl.style.stroke = color;
+  if (barEl) {
+    barEl.style.width      = `${pct}%`;
+    barEl.style.background = color;
   }
 
-  barEls.forEach(bar => {
-    bar.style.width = `${pct}%`;
-    bar.style.background = color;
-    bar.classList.remove('score-bar-low');
-  });
-
-  const summary = document.getElementById('score-summary');
-  if (summary) {
-    const level = pct >= 70 ? 'high clarity' : pct >= 40 ? 'moderate clarity' : 'low clarity';
-    summary.innerHTML = `This specification has <strong style="color:${color}">${level}</strong> (${pct}%). ${
-      pct >= 70
-        ? 'Most requirements are clear and testable.'
-        : pct >= 40
-        ? 'Several sections lack concrete criteria or unaddressed edge cases.'
-        : 'Significant gaps detected — resolve the issues above before handing to engineering.'
-    }`;
+  const label = status || (isGreen ? 'Ready for Engineering' : isAmber ? 'Needs Improvement' : 'Low Quality PRD');
+  const pillCls = isGreen ? 'status-green' : isAmber ? 'status-yellow' : 'status-red';
+  if (stEl) {
+    stEl.textContent = label;
+    stEl.className   = `summary-status-pill ${pillCls}`;
   }
 
-  renderStatus(status, pct);
-}
-
-function renderStatus(status, pct) {
-  let el = document.getElementById('prd-status-label');
-  if (!el) {
-    el = document.createElement('div');
-    el.id = 'prd-status-label';
-    el.className = 'prd-status-label';
-    const scoreCircle = document.querySelector('.score-circle');
-    if (scoreCircle) scoreCircle.after(el);
+  if (descEl) {
+    descEl.textContent = isGreen
+      ? 'Most requirements are clear and testable. Ready to hand off to engineering.'
+      : isAmber
+      ? 'Several sections lack concrete criteria or have unaddressed edge cases.'
+      : 'Significant gaps detected — resolve the issues below before handing to engineering.';
   }
 
-  const isGreen  = pct >= 70;
-  const isYellow = pct >= 40 && pct < 70;
-
-  el.textContent = status || (isGreen ? 'Ready for Engineering' : isYellow ? 'Needs Improvement' : 'Low Quality PRD');
-  el.className   = 'prd-status-label ' + (isGreen ? 'status-green' : isYellow ? 'status-yellow' : 'status-red');
+  if (topEl) {
+    const top3 = issues.slice(0, 3);
+    if (top3.length === 0) {
+      topEl.innerHTML = `<div class="summary-issue-row" style="color:#22c55e">✓ No issues detected — great PRD!</div>`;
+    } else {
+      const bulletColor = (type) =>
+        type === 'ambiguity' ? '#f59e0b' :
+        type === 'missing_logic' ? '#ef4444' : '#3b82f6';
+      topEl.innerHTML = top3.map(issue => `
+        <div class="summary-issue-row">
+          <span class="summary-issue-bullet" style="background:${bulletColor(issue.type)}"></span>
+          <span>${escHtml(issue.explanation)}</span>
+        </div>
+      `).join('');
+    }
+  }
 }
 
 // ── History panel ─────────────────────────────────────────────────────────────
@@ -323,8 +337,25 @@ function timeAgo(date) {
   return `${Math.floor(diff / 86400)}d ago`;
 }
 
+initTabs();
 loadHistory();
 loadDashboard();
+
+// ── Tab switching ─────────────────────────────────────────────────────────────
+function initTabs() {
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => activateTab(btn.dataset.tab));
+  });
+}
+
+function activateTab(name) {
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === name);
+  });
+  document.querySelectorAll('.tab-panel').forEach(panel => {
+    panel.classList.toggle('active', panel.id === `tab-${name}`);
+  });
+}
 
 // ── Admin Dashboard ───────────────────────────────────────────────────────────
 async function loadDashboard() {
